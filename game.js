@@ -26,11 +26,11 @@ function spawnEnemies() {
   }
 }
 
-// 🎯 預判射擊：讓子彈朝未來位置飛去
+
 function shootCarrotAt(target) {
   const tx = target.x;
   const ty = target.y;
-  const tvx = 0; // 假設敵人只垂直移動
+  const tvx = 0;
   const tvy = target.speed;
 
   const dx = tx - towerX;
@@ -41,24 +41,34 @@ function shootCarrotAt(target) {
   const b = 2 * (dx * tvx + dy * tvy);
   const c = dx * dx + dy * dy;
 
-  let t;
-  const discriminant = b * b - 4 * a * c;
+  let t = 0;
 
-  if (discriminant >= 0) {
-    const sqrtD = Math.sqrt(discriminant);
-    const t1 = (-b + sqrtD) / (2 * a);
-    const t2 = (-b - sqrtD) / (2 * a);
-    t = Math.max(t1, t2);
+  if (Math.abs(a) < 1e-6) {
+    // 線性解（子彈速度 ≈ 敵人速度）
+    if (Math.abs(b) > 1e-6) {
+      t = -c / b;
+    }
   } else {
-    t = 0; // 無法預測就射當下位置
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant >= 0) {
+      const sqrtD = Math.sqrt(discriminant);
+      const t1 = (-b + sqrtD) / (2 * a);
+      const t2 = (-b - sqrtD) / (2 * a);
+      t = Math.max(t1, t2, 0); // 避免 t < 0
+    }
   }
 
   const leadX = tx + tvx * t;
   const leadY = ty + tvy * t;
-
   const lx = leadX - towerX;
   const ly = leadY - towerY;
   const distance = Math.hypot(lx, ly);
+
+  // 避免除以 0
+  if (distance === 0) {
+    console.warn("🚫 無法計算方向，發射取消");
+    return;
+  }
 
   carrots.push({
     x: towerX,
@@ -68,6 +78,7 @@ function shootCarrotAt(target) {
     hit: false
   });
 }
+
 
 // 🎮 更新邏輯
 function update() {
