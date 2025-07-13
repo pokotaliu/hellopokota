@@ -1,20 +1,32 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>波兔村城門防衛戰</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>胖波塔防遊戲</title>
+  <style>
+    canvas {
+      border: 2px solid #333;
+      display: block;
+      margin: 20px auto;
+      background: #f8f8f8;
+    }
+    button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #ff9966;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <div id="game-container">
-    <!-- 主塔：城門 -->
-    <div id="main-tower"></div>
-    <canvas id="game-canvas"></canvas>
-  </div>
-  <script src="game.js"></script>
   <button id="spawn-btn">✨ 產生3個敵人</button>
-<canvas id="game-canvas"></canvas>
+  <canvas id="game-canvas"></canvas>
 
+  <script src="game.js"></script>
 </body>
 </html>
-
