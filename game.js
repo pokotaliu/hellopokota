@@ -14,7 +14,7 @@ let lastAttackTime = 0;
 let enemies = [];
 let carrots = [];
 
-// 🎯 按鈕：產生敵人
+// 🎯 產生敵人
 function spawnEnemies() {
   for (let i = 0; i < 3; i++) {
     enemies.push({
@@ -26,7 +26,7 @@ function spawnEnemies() {
   }
 }
 
-
+// 🎯 發射蘿蔔（含超級爆擊判斷）
 function shootCarrotAt(target) {
   const tx = target.x;
   const ty = target.y;
@@ -44,17 +44,14 @@ function shootCarrotAt(target) {
   let t = 0;
 
   if (Math.abs(a) < 1e-6) {
-    // 線性解（子彈速度 ≈ 敵人速度）
-    if (Math.abs(b) > 1e-6) {
-      t = -c / b;
-    }
+    if (Math.abs(b) > 1e-6) t = -c / b;
   } else {
     const discriminant = b * b - 4 * a * c;
     if (discriminant >= 0) {
       const sqrtD = Math.sqrt(discriminant);
       const t1 = (-b + sqrtD) / (2 * a);
       const t2 = (-b - sqrtD) / (2 * a);
-      t = Math.max(t1, t2, 0); // 避免 t < 0
+      t = Math.max(t1, t2, 0);
     }
   }
 
@@ -64,27 +61,26 @@ function shootCarrotAt(target) {
   const ly = leadY - towerY;
   const distance = Math.hypot(lx, ly);
 
-  // 避免除以 0
-  if (distance === 0) {
-    console.warn("🚫 無法計算方向，發射取消");
-    return;
-  }
+  if (distance === 0) return;
+
+  const isSuper = Math.random() < 0.05;
+  const radius = isSuper ? 20 : 5;
 
   carrots.push({
     x: towerX,
     y: towerY,
     dx: (lx / distance) * bulletSpeed,
     dy: (ly / distance) * bulletSpeed,
-    hit: false
+    hit: false,
+    super: isSuper,
+    radius: radius
   });
 }
-
 
 // 🎮 更新邏輯
 function update() {
   const now = Date.now();
 
-  // 敵人移動
   enemies.forEach((enemy) => {
     if (enemy.alive) {
       enemy.y += enemy.speed;
@@ -95,10 +91,8 @@ function update() {
     }
   });
 
-  // 自動攻擊
   const target = enemies.find((e) =>
-    e.alive &&
-    Math.hypot(e.x - towerX, e.y - towerY) <= attackRange
+    e.alive && Math.hypot(e.x - towerX, e.y - towerY) <= attackRange
   );
 
   if (target && now - lastAttackTime > attackCooldown) {
@@ -106,33 +100,29 @@ function update() {
     lastAttackTime = now;
   }
 
-  // 蘿蔔飛行邏輯
   carrots.forEach((carrot) => {
     carrot.x += carrot.dx;
     carrot.y += carrot.dy;
   });
 
-  // 命中判定
   carrots.forEach((carrot) => {
     enemies.forEach((enemy) => {
-      if (
-        enemy.alive &&
-        Math.abs(carrot.x - enemy.x) < 15 &&
-        Math.abs(carrot.y - enemy.y) < 15
-      ) {
+      if (!enemy.alive) return;
+
+      const distance = Math.hypot(carrot.x - enemy.x, carrot.y - enemy.y);
+      const hitRadius = carrot.super ? 25 : 15;
+
+      if (distance < hitRadius) {
         enemy.alive = false;
         carrot.hit = true;
-        console.log("💥 命中敵人！");
+        console.log(carrot.super ? "🔥 超級蘿蔔爆擊命中！" : "💥 命中敵人！");
       }
     });
   });
 
-  // 移除無效蘿蔔
   carrots = carrots.filter((c) =>
-    c.x >= 0 &&
-    c.x <= canvas.width &&
-    c.y >= 0 &&
-    c.y <= canvas.height &&
+    c.x >= 0 && c.x <= canvas.width &&
+    c.y >= 0 && c.y <= canvas.height &&
     !c.hit
   );
 }
@@ -141,7 +131,7 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 攻擊範圍圈
+  // 攻擊範圍
   ctx.beginPath();
   ctx.arc(towerX, towerY, attackRange, 0, Math.PI * 2);
   ctx.strokeStyle = "rgba(255, 0, 0, 0.2)";
@@ -159,10 +149,10 @@ function draw() {
   });
 
   // 蘿蔔
-  ctx.fillStyle = "orange";
   carrots.forEach((carrot) => {
     ctx.beginPath();
-    ctx.arc(carrot.x, carrot.y, 5, 0, Math.PI * 2);
+    ctx.arc(carrot.x, carrot.y, carrot.radius, 0, Math.PI * 2);
+    ctx.fillStyle = carrot.super ? "red" : "orange";
     ctx.fill();
   });
 
@@ -178,7 +168,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// 🚀 啟動
+// 🚀 初始化
 window.onload = () => {
   gameLoop();
   document.getElementById("spawn-btn").addEventListener("click", spawnEnemies);
