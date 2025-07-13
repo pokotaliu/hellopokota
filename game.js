@@ -128,7 +128,8 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
-
-// 🎯 綁定按鈕產敵人
-document.getElementById("spawn-btn").addEventListener("click", spawnEnemies);
+// 啟動遊戲 & 按鈕事件確保在 DOM 載入後才綁定
+window.onload = () => {
+  gameLoop();
+  document.getElementById("spawn-btn").addEventListener("click", spawnEnemies);
+};
