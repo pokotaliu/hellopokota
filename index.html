@@ -2,31 +2,39 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>胖波塔防遊戲</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>胖波守城戰</title>
   <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #f8f8f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
     canvas {
       border: 2px solid #333;
-      display: block;
-      margin: 20px auto;
-      background: #f8f8f8;
+      margin-top: 20px;
     }
-    button {
-      display: block;
-      margin: 20px auto;
-      padding: 10px 20px;
-      font-size: 18px;
-      background: #ff9966;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
+    #log-box {
+      width: 600px;
+      height: 100px;
+      overflow-y: auto;
+      background: #111;
+      color: #0f0;
+      font-size: 14px;
+      padding: 5px;
+      box-sizing: border-box;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <button id="spawn-btn">✨ 產生3個敵人</button>
-  <canvas id="game-canvas"></canvas>
+  <h1>胖波守城戰</h1>
+  <canvas id="game-canvas" width="600" height="600"></canvas>
+  <div id="log-box"></div>
 
-  <script src="game.js"></script>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
