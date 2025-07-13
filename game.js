@@ -4,40 +4,54 @@ const ctx = canvas.getContext("2d");
 canvas.width = 600;
 canvas.height = 600;
 
-// 🐰 主塔位置
 const towerX = canvas.width / 2;
 const towerY = 580;
 
-// 敵人資料
+// 攻擊參數
+const attackRange = 150;           // 攻擊範圍（像圓形雷達半徑）
+const attackCooldown = 500;        // 每次攻擊後冷卻時間（毫秒）
+let lastAttackTime = 0;            // 上次攻擊的時間戳
+
 let enemies = [
   { x: 100, y: -30, speed: 1.5, alive: true },
   { x: 300, y: -80, speed: 1.2, alive: true },
   { x: 500, y: -50, speed: 1.0, alive: true },
 ];
 
-// 蘿蔔子彈陣列
 let carrots = [];
 
-// 🧠 更新邏輯
 function update() {
-  // 敵人移動
+  const now = Date.now();
+
+  // 移動敵人
   enemies.forEach((enemy) => {
     if (enemy.alive) {
       enemy.y += enemy.speed;
 
       if (enemy.y >= towerY) {
-        console.log("⚠️ 敵人到達城門！");
-        enemy.alive = false; // 讓敵人消失
+        enemy.alive = false;
+        console.log("⚠️ 敵人突破城門！");
       }
     }
   });
+
+  // 自動攻擊判斷
+  const target = enemies.find((e) =>
+    e.alive &&
+    Math.hypot(e.x - towerX, e.y - towerY) <= attackRange
+  );
+
+  if (target && now - lastAttackTime > attackCooldown) {
+    shootCarrotAt(target);
+    lastAttackTime = now;
+  }
 
   // 蘿蔔飛行
   carrots.forEach((carrot) => {
     carrot.y -= carrot.speed;
   });
 
-  // 撞擊判定
+  // 撞擊偵測
   carrots.forEach((carrot) => {
     enemies.forEach((enemy) => {
       if (
@@ -52,15 +66,20 @@ function update() {
     });
   });
 
-  // 清除飛太遠的蘿蔔和擊中的
   carrots = carrots.filter((c) => c.y > 0 && !c.hit);
 }
 
-// 🎨 畫面渲染
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 敵人
+  // 畫攻擊範圍圈圈
+  ctx.beginPath();
+  ctx.arc(towerX, towerY, attackRange, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(255, 0, 0, 0.2)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 畫敵人
   ctx.fillStyle = "blue";
   enemies.forEach((enemy) => {
     if (enemy.alive) {
@@ -70,42 +89,6 @@ function draw() {
     }
   });
 
-  // 蘿蔔子彈
+  // 畫蘿蔔子彈
   ctx.fillStyle = "orange";
-  carrots.forEach((carrot) => {
-    ctx.beginPath();
-    ctx.arc(carrot.x, carrot.y, 5, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // 城門底座（可視化）
-  ctx.fillStyle = "gray";
-  ctx.fillRect(towerX - 30, towerY, 60, 20);
-}
-
-// 🔫 射出蘿蔔
-function shootCarrot() {
-  carrots.push({
-    x: towerX,
-    y: towerY,
-    speed: 5,
-    hit: false,
-  });
-}
-
-// 🔁 遊戲主迴圈
-function gameLoop() {
-  update();
-  draw();
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
-
-// 🔘 點擊或按空白鍵發射蘿蔔
-document.addEventListener("click", shootCarrot);
-document.addEventListener("keydown", (e) => {
-  if (e.code === "Space") {
-    shootCarrot();
-  }
-});
+  carrots.forEach((carrot) =>
