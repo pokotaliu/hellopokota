@@ -9,7 +9,7 @@ const towerX = canvas.width / 2;
 const towerY = 580;
 
 // 🥕 攻擊設定
-const attackRange = 150;       // 自動攻擊範圍
+const attackRange = 300;       // 自動攻擊範圍
 const attackCooldown = 500;    // 攻擊冷卻時間（毫秒）
 let lastAttackTime = 0;        // 上次攻擊的時間
 
