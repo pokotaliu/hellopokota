@@ -84,17 +84,22 @@ canvas {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    padding: 8px;
+    padding: 8px 0;
     z-index: 100;
   }
 
   .test-btn {
-    flex: 1 1 40%;
+    width: 46%;
     margin: 6px;
     font-size: 16px;
-    padding: 12px;
+    padding: 12px 6px;
     border-radius: 10px;
     text-align: center;
+    background: #444;
+    border: 1px solid #888;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    flex: none;
   }
 
   #message-box {
