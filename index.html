@@ -2,71 +2,63 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>胖波跳跳跳 v2</title>
+  <title>胖波跳跳樂</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #111; overflow: hidden; }
-    canvas { display: block; width: 100vw; height: 100vh; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
 
-    #game-over {
-      position: fixed;
-      top: 40%;
-      left: 50%;
-      transform: translateX(-50%);
-      color: white;
-      font-size: 24px;
-      background: rgba(0,0,0,0.8);
-      padding: 20px;
-      border-radius: 10px;
-      display: none;
-      z-index: 10;
-      text-align: center;
+    canvas {
+      display: block;
     }
 
     #controls {
       position: fixed;
       bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 0;
+      right: 0;
       display: flex;
-      gap: 10px;
-      z-index: 9;
+      justify-content: center;
+      gap: 16px;
+      z-index: 10;
     }
 
-    .btn {
-      width: 60px;
-      height: 60px;
-      font-size: 28px;
-      border: none;
+    .ctrl-btn {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #aaa;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
       color: white;
-      backdrop-filter: blur(4px);
+      font-size: 24px;
+      text-align: center;
+      line-height: 56px;
+      user-select: none;
     }
 
-    @media (min-width: 768px) {
-      #controls { display: none; } /* 桌機不顯示按鈕 */
+    .ctrl-btn:active {
+      background: rgba(255, 255, 255, 0.3);
     }
   </style>
 </head>
 <body>
-  <div id="game-over">💀 胖波掉下去了！<br/><br/><button onclick="location.reload()">重新開始</button></div>
 
-  <!-- 📱 手機操作按鈕 -->
+  <!-- 📱 控制按鈕 -->
   <div id="controls">
-    <button class="btn" id="left">⬅️</button>
-    <button class="btn" id="up">⬆️</button>
-    <button class="btn" id="right">➡️</button>
+    <div class="ctrl-btn" id="left">⬅️</div>
+    <div class="ctrl-btn" id="jump">⬆️</div>
+    <div class="ctrl-btn" id="right">➡️</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <!-- 引入 Phaser -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
   <script>
     let player, platforms, cursors, camera;
-    let gameOver = false;
-    let moveLeft = false;
-    let moveRight = false;
-    let jump = false;
+    let jumpKey, leftPressed = false, rightPressed = false, jumpPressed = false;
 
     const config = {
       type: Phaser.AUTO,
@@ -75,7 +67,7 @@
       physics: {
         default: 'arcade',
         arcade: {
-          gravity: { y: 800 },
+          gravity: { y: 600 },
           debug: false
         }
       },
@@ -88,63 +80,69 @@
 
     const game = new Phaser.Game(config);
 
-    function preload() {}
+    function preload() {
+      this.load.image('platform', 'https://labs.phaser.io/assets/sprites/platform.png');
+    }
 
     function create() {
       const scene = this;
-      camera = scene.cameras.main;
 
-      // 平台群
-      platforms = scene.physics.add.staticGroup();
-      const pY = [500, 400, 300, 200];
-      pY.forEach((y, i) => {
-        const p = platforms.create(100 + i * 80, y, null).setScale(2.5, 0.5).refreshBody();
-        scene.add.rectangle(p.x, p.y, p.displayWidth, 20, 0x8888ff).setDepth(-1);
-      });
+      // 平台群組
+      platforms = this.physics.add.staticGroup();
+      for (let i = 0; i < 10; i++) {
+        const x = Phaser.Math.Between(50, config.width - 50);
+        const y = config.height - i * 150;
+        platforms.create(x, y, 'platform').setScale(0.5).refreshBody();
+      }
 
-      // 胖波
-      player = scene.physics.add.sprite(200, 100);
-      player.body.setSize(30, 30);
-      player.setBounce(0.2);
-      player.setCollideWorldBounds(false);
-      const pokota = scene.add.circle(0, 0, 15, 0xff88cc);
-      player.pokotaSprite = pokota;
+      // 主角（胖波）
+      player = this.physics.add.circle(200, 200, 20, 0xff88cc);
+      player.body.setCollideWorldBounds(true);
+      player.body.setBounce(0.2);
 
-      scene.physics.add.collider(player, platforms);
+      this.physics.add.collider(player, platforms);
 
-      cursors = scene.input.keyboard.createCursorKeys();
+      // 鏡頭跟隨胖波
+      camera = this.cameras.main;
+      camera.startFollow(player);
+      camera.setBounds(0, -10000, config.width, 10000);
 
-      // 📱 綁定手機按鈕
-      document.getElementById('left').addEventListener('touchstart', () => moveLeft = true);
-      document.getElementById('left').addEventListener('touchend', () => moveLeft = false);
-      document.getElementById('right').addEventListener('touchstart', () => moveRight = true);
-      document.getElementById('right').addEventListener('touchend', () => moveRight = false);
-      document.getElementById('up').addEventListener('touchstart', () => jump = true);
-      document.getElementById('up').addEventListener('touchend', () => jump = false);
+      // 鍵盤控制
+      cursors = this.input.keyboard.createCursorKeys();
+
+      // 手機按鈕
+      document.getElementById('left').addEventListener('touchstart', () => leftPressed = true);
+      document.getElementById('left').addEventListener('touchend', () => leftPressed = false);
+      document.getElementById('right').addEventListener('touchstart', () => rightPressed = true);
+      document.getElementById('right').addEventListener('touchend', () => rightPressed = false);
+      document.getElementById('jump').addEventListener('touchstart', () => jumpPressed = true);
+      document.getElementById('jump').addEventListener('touchend', () => jumpPressed = false);
     }
 
     function update() {
-      if (gameOver) return;
+      if (!player) return;
 
-      player.pokotaSprite.x = player.x;
-      player.pokotaSprite.y = player.y;
-
-      let vx = 0;
-      if (cursors.left.isDown || moveLeft) vx = -200;
-      if (cursors.right.isDown || moveRight) vx = 200;
-      player.setVelocityX(vx);
-
-      if ((cursors.up.isDown || jump) && player.body.touching.down) {
-        player.setVelocityY(-400);
+      const body = player.body;
+      if (cursors.left.isDown || leftPressed) {
+        body.setVelocityX(-160);
+      } else if (cursors.right.isDown || rightPressed) {
+        body.setVelocityX(160);
+      } else {
+        body.setVelocityX(0);
       }
 
-      if (player.y < camera.scrollY + 200) {
-        camera.scrollY = player.y - 200;
+      // 跳躍
+      const isTouching = body.touching.down || body.blocked.down;
+      if ((cursors.up.isDown || jumpPressed) && isTouching) {
+        body.setVelocityY(-400);
       }
 
-      if (player.y > camera.scrollY + config.height + 100) {
-        document.getElementById('game-over').style.display = 'block';
-        gameOver = true;
+      // 自動產生新平台（往上跳時）
+      let maxY = camera.scrollY;
+      if (player.y < maxY + 300) {
+        const x = Phaser.Math.Between(50, config.width - 50);
+        const y = maxY - 150;
+        platforms.create(x, y, 'platform').setScale(0.5).refreshBody();
       }
     }
   </script>
