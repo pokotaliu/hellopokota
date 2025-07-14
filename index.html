@@ -1,5 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>胖波功能測試場</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+<body>
+
+  <!-- 🔘 左上角按鈕列 -->
+  <div id="ui-panel">
+    <button class="test-btn" onclick="runTest('move')">🕹 測試胖波移動</button>
+    <button class="test-btn" onclick="runTest('map')">🗺 載入地圖</button>
+    <button class="test-btn" onclick="runTest('enemy')">👾 生成敵人</button>
+    <button class="test-btn" onclick="runTest('dialog')">💬 顯示訊息框</button>
+  </div>
+
+  <!-- 💬 訊息框（右側） -->
+  <div id="message-box"></div>
+
+  <!-- 🚀 載入 Phaser 與 JS 模組 -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+  <script src="uiManager.js"></script>
+  <script src="main.js"></script>
+
+  <!-- 🔧 測試功能選單（嵌在這邊最方便） -->
+  <script>
+    function runTest(feature) {
+      switch (feature) {
+        case 'move':
+          showMessage('胖波開始亂跑！');
+          if (window.scene && window.pokota) {
+            let dx = Phaser.Math.Between(-1, 1);
+            let dy = Phaser.Math.Between(-1, 1);
+            window.pokota.x += dx * 32;
+            window.pokota.y += dy * 32;
+          }
+          break;
+        case 'map':
+          showMessage('🗺 地圖載入中...（尚未實作）');
+          break;
+        case 'enemy':
+          showMessage('👾 敵人生成完成！（尚未實作）');
+          break;
+        case 'dialog':
+          showMessage('💬 這是一個測試訊息框唷～');
+          break;
+      }
+    }
+  </script>
+</body>
+</html>
