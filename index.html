@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <title>胖波功能測試場</title>
-  <link rel="stylesheet" href="style.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#222222" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
@@ -42,13 +43,16 @@
       }
     }
 
-    // 載入 UI 結構後綁定拖曳功能
     fetch('ui.html')
       .then(res => res.text())
       .then(html => {
         document.getElementById('ui-container').innerHTML = html;
         const msgBox = document.getElementById('message-box');
         if (msgBox) enableDrag(msgBox);
+        MessageManager.show("🐰 歡迎來到胖波測試場！");
+      })
+      .catch(err => {
+        console.error("載入 UI 發生錯誤：", err);
       });
   </script>
 </body>
