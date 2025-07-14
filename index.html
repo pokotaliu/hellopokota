@@ -1,121 +1,351 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>胖波的可愛村莊</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      background: #fce8f0;
-      font-family: 'Comic Sans MS', cursive;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    canvas {
-      border: 4px solid #ff88aa;
-      background: #ccf5d4;
-      image-rendering: pixelated;
-    }
-    .btn-panel {
-      margin-top: 10px;
-    }
-    button {
-      padding: 8px 16px;
-      margin: 5px;
-      font-size: 18px;
-      border-radius: 10px;
-      border: none;
-      background-color: #ffb3d1;
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>胖波的可愛村莊</title>
+    <style>
+        /* CSS 變數：讓顏色管理更方便 */
+        :root {
+            --sky-start-color: #a7d9f7; /* 天空漸層開始色 */
+            --sky-end-color: #d1edff;   /* 天空漸層結束色 */
+            --ground-color: #fce8f0;    /* 地面基礎色 */
+            --canvas-border-color: #ff88aa;
+            --grass-base-color: #ccf5d4; /* 草地基礎色 */
+            --house-wall-color: #f7b05b; /* 小屋牆壁色 */
+            --house-roof-color: #e07b39; /* 小屋屋頂色 */
+            --house-door-window-color: #9c5c37; /* 小屋門窗色 */
+            --pokota-body-color: #ffb3d1; /* 胖波身體色 */
+            --pokota-eye-color: #333; /* 胖波眼睛色 */
+            --pokota-cheek-color: #ff7fba; /* 胖波臉頰色 */
+            --button-bg-color: #ffb3d1;
+            --button-text-color: white;
+            --button-hover-color: #ff99c1;
+            --button-active-color: #ff7fba;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* 模擬天空和地面漸層背景 */
+            background: linear-gradient(to bottom, var(--sky-start-color) 0%, var(--sky-end-color) 50%, var(--ground-color) 100%);
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden; /* 防止滾動條 */
+        }
+
+        h1 {
+            color: #d85785; /* 可愛的主題色 */
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 3px rgba(255,255,255,0.7); /* 文字陰影 */
+            font-size: 3em; /* 大一點的標題 */
+        }
+
+        canvas {
+            border: 4px solid var(--canvas-border-color);
+            border-radius: 8px; /* 圓角邊框 */
+            background: var(--grass-base-color); /* Canvas 背景作為草地基礎色 */
+            image-rendering: pixelated;
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2); /* 更明顯的陰影 */
+        }
+
+        .btn-panel {
+            margin-top: 20px;
+            display: grid; /* 使用 Grid 佈局按鈕 */
+            grid-template-areas:
+                ". up ."
+                "left . right"
+                ". down .";
+            gap: 10px; /* 按鈕間的間距 */
+            max-width: 200px; /* 限制面板寬度 */
+        }
+
+        .btn-panel button {
+            padding: 10px 20px;
+            font-size: 20px;
+            border-radius: 12px;
+            border: none;
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            width: 70px; /* 固定按鈕寬度 */
+            height: 70px; /* 固定按鈕高度，使其方形化 */
+            display: flex; /* 使文字居中 */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-panel button:hover {
+            background-color: var(--button-hover-color);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            background-color: var(--button-active-color);
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Grid 區域分配 */
+        #moveUpBtn { grid-area: up; }
+        #moveLeftBtn { grid-area: left; }
+        #moveRightBtn { grid-area: right; }
+        #moveDownBtn { grid-area: down; }
+    </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="320" height="320"></canvas>
-  <div class="btn-panel">
-    <button onclick="moveLeft()">⬅</button>
-    <button onclick="moveRight()">➡</button>
-  </div>
+    <h1>胖波的可愛村莊</h1>
+    <canvas id="gameCanvas"></canvas> <div class="btn-panel">
+        <button id="moveUpBtn">⬆</button>
+        <button id="moveLeftBtn">⬅</button>
+        <button id="moveRightBtn">➡</button>
+        <button id="moveDownBtn">⬇</button>
+    </div>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    <script>
+        const GAME_CONFIG_BASE = { // 基礎配置，顏色部分在 DOMContentLoaded 後初始化
+            tileSize: 32,
+            mapRows: 10,
+            mapCols: 10,
+            map: [
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ],
+            initialPokotaX: 4,
+            initialPokotaY: 4
+        };
 
-    const tileSize = 32;
+        let GAME_CONFIG = {}; // 用於儲存完整的配置，包括動態獲取的顏色
 
-    // 簡易地圖資料（0: 草地, 1: 小屋）
-    const map = [
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    ];
+        let canvas;
+        let ctx;
+        let pokotaCurrentX;
+        let pokotaCurrentY;
+        let tileSize, map, mapRows, mapCols, colors; // 提取常用變數
 
-    // 胖波的位置
-    let pokotaX = 4;
-    let pokotaY = 2;
-
-    function drawMap() {
-      for (let y = 0; y < map.length; y++) {
-        for (let x = 0; x < map[y].length; x++) {
-          if (map[y][x] === 0) {
-            ctx.fillStyle = "#ccf5d4"; // 草地
-          } else if (map[y][x] === 1) {
-            ctx.fillStyle = "#f7b05b"; // 小屋
-          }
-          ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+        // --- 繪圖邏輯 ---
+        function drawGrass(x, y) {
+            ctx.fillStyle = colors.grass[Math.floor(Math.random() * colors.grass.length)]; // 隨機草地顏色
+            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            // 可以添加一些小點或線條模擬草紋理
+            ctx.fillStyle = `rgba(0,0,0,0.05)`;
+            for (let i = 0; i < 3; i++) {
+                ctx.fillRect(x * tileSize + Math.random() * tileSize, y * tileSize + Math.random() * tileSize, 1, 1);
+            }
         }
-      }
-    }
 
-    function drawPokota() {
-      ctx.beginPath();
-      ctx.arc(
-        pokotaX * tileSize + tileSize / 2,
-        pokotaY * tileSize + tileSize / 2,
-        tileSize / 2 - 4,
-        0,
-        Math.PI * 2
-      );
-      ctx.fillStyle = "pink";
-      ctx.fill();
-      ctx.font = "bold 16px sans-serif";
-      ctx.fillStyle = "white";
-      ctx.fillText("P", pokotaX * tileSize + 9, pokotaY * tileSize + 23);
-    }
+        function drawHouse(x, y) {
+            const tileX = x * tileSize;
+            const tileY = y * tileSize;
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawMap();
-      drawPokota();
-    }
+            // 牆壁
+            ctx.fillStyle = colors.houseWall;
+            ctx.fillRect(tileX + 2, tileY + tileSize / 3, tileSize - 4, tileSize - tileSize / 3 - 2);
 
-    function moveLeft() {
-      if (pokotaX > 0) {
-        pokotaX--;
-        draw();
-      }
-    }
+            // 屋頂
+            ctx.fillStyle = colors.houseRoof;
+            ctx.beginPath();
+            ctx.moveTo(tileX, tileY + tileSize / 3);
+            ctx.lineTo(tileX + tileSize / 2, tileY);
+            ctx.lineTo(tileX + tileSize, tileY + tileSize / 3);
+            ctx.closePath();
+            ctx.fill();
 
-    function moveRight() {
-      if (pokotaX < map[0].length - 1) {
-        pokotaX++;
-        draw();
-      }
-    }
+            // 門
+            ctx.fillStyle = colors.houseDoorWindow;
+            ctx.fillRect(tileX + tileSize / 2 - 4, tileY + tileSize * 0.6, 8, tileSize * 0.3);
 
-    draw();
-  </script>
+            // 窗戶
+            ctx.fillRect(tileX + tileSize * 0.2, tileY + tileSize * 0.4, 6, 6);
+            ctx.fillRect(tileX + tileSize * 0.8 - 6, tileY + tileSize * 0.4, 6, 6);
+        }
+
+        function drawMap() {
+            map.forEach((row, y) => {
+                row.forEach((cellType, x) => {
+                    if (cellType === 0) {
+                        drawGrass(x, y);
+                    } else if (cellType === 1) {
+                        drawHouse(x, y);
+                    }
+                });
+            });
+        }
+
+        function drawPokota() {
+            const centerX = pokotaCurrentX * tileSize + tileSize / 2;
+            const centerY = pokotaCurrentY * tileSize + tileSize / 2;
+            const radius = tileSize / 2 - 4;
+
+            // 身體 (圓形)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fillStyle = colors.pokotaBody;
+            ctx.fill();
+
+            // 眼睛
+            const eyeRadius = radius * 0.15;
+            const eyeOffset = radius * 0.3;
+            ctx.fillStyle = colors.pokotaEye;
+            ctx.beginPath();
+            ctx.arc(centerX - eyeOffset, centerY - eyeOffset * 0.5, eyeRadius, 0, Math.PI * 2); // 左眼
+            ctx.arc(centerX + eyeOffset, centerY - eyeOffset * 0.5, eyeRadius, 0, Math.PI * 2); // 右眼
+            ctx.fill();
+
+            // 臉頰
+            const cheekRadius = radius * 0.2;
+            const cheekOffset = radius * 0.5;
+            ctx.fillStyle = colors.pokotaCheek;
+            ctx.beginPath();
+            ctx.arc(centerX - cheekOffset, centerY + eyeOffset * 0.5, cheekRadius, 0, Math.PI * 2); // 左臉頰
+            ctx.arc(centerX + cheekOffset, centerY + eyeOffset * 0.5, cheekRadius, 0, Math.PI * 2); // 右臉頰
+            ctx.fill();
+
+            // 小嘴巴 (簡單的弧線)
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + radius * 0.3, radius * 0.3, 0, Math.PI);
+            ctx.strokeStyle = colors.pokotaEye;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 頭髮/裝飾 (可選)
+            ctx.fillStyle = colors.pokotaBody;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - radius * 0.8, radius * 0.3, Math.PI, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function renderGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMap();
+            drawPokota();
+        }
+
+        // --- 遊戲邏輯 ---
+        function movePokota(direction) {
+            let newX = pokotaCurrentX;
+            let newY = pokotaCurrentY;
+
+            switch (direction) {
+                case 'left':
+                    newX = Math.max(0, pokotaCurrentX - 1);
+                    break;
+                case 'right':
+                    newX = Math.min(mapCols - 1, pokotaCurrentX + 1);
+                    break;
+                case 'up':
+                    newY = Math.max(0, pokotaCurrentY - 1);
+                    break;
+                case 'down':
+                    newY = Math.min(mapRows - 1, pokotaCurrentY + 1);
+                    break;
+            }
+
+            if (newX !== pokotaCurrentX || newY !== pokotaCurrentY) {
+                pokotaCurrentX = newX;
+                pokotaCurrentY = newY;
+                renderGame();
+            }
+        }
+
+        // --- 初始化與事件監聽器 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            canvas = document.getElementById("gameCanvas");
+            ctx = canvas.getContext("2d");
+
+            // 在 DOMContentLoaded 後才安全地讀取 CSS 變數
+            GAME_CONFIG.colors = {
+                grass: [],
+                houseWall: getComputedStyle(document.documentElement).getPropertyValue('--house-wall-color'),
+                houseRoof: getComputedStyle(document.documentElement).getPropertyValue('--house-roof-color'),
+                houseDoorWindow: getComputedStyle(document.documentElement).getPropertyValue('--house-door-window-color'),
+                pokotaBody: getComputedStyle(document.documentElement).getPropertyValue('--pokota-body-color'),
+                pokotaEye: getComputedStyle(document.documentElement).getPropertyValue('--pokota-eye-color'),
+                pokotaCheek: getComputedStyle(document.documentElement).getPropertyValue('--pokota-cheek-color')
+            };
+
+            // 為草地生成隨機的綠色調
+            // 先獲取 CSS 變數的值
+            const grassBaseColorHex = getComputedStyle(document.documentElement).getPropertyValue('--grass-base-color');
+            const baseColor = parseInt(grassBaseColorHex.trim().slice(1), 16);
+
+            for (let i = 0; i < 5; i++) {
+                const r = (baseColor >> 16) & 0xFF;
+                const g = (baseColor >> 8) & 0xFF;
+                const b = baseColor & 0xFF;
+
+                const offset = Math.floor(Math.random() * 20) - 10; // -10到10的隨機偏移
+                const newR = Math.max(0, Math.min(255, r + offset));
+                const newG = Math.max(0, Math.min(255, g + offset));
+                const newB = Math.max(0, Math.min(255, b + offset));
+                GAME_CONFIG.colors.grass.push(`#${(newR << 16 | newG << 8 | newB).toString(16).padStart(6, '0')}`);
+            }
+
+            // 合併基礎配置和顏色配置
+            Object.assign(GAME_CONFIG, GAME_CONFIG_BASE);
+
+            // 重新解構變數以確保獲取到更新後的 `colors`
+            ({ tileSize, map, mapRows, mapCols, colors } = GAME_CONFIG);
+
+            // 更新畫布尺寸以適應新的地圖大小
+            canvas.width = mapCols * tileSize;
+            canvas.height = mapRows * tileSize;
+
+            pokotaCurrentX = GAME_CONFIG.initialPokotaX;
+            pokotaCurrentY = GAME_CONFIG.initialPokotaY;
+
+            const moveUpBtn = document.getElementById('moveUpBtn');
+            const moveLeftBtn = document.getElementById('moveLeftBtn');
+            const moveRightBtn = document.getElementById('moveRightBtn');
+            const moveDownBtn = document.getElementById('moveDownBtn');
+
+            moveUpBtn.addEventListener('click', () => movePokota('up'));
+            moveLeftBtn.addEventListener('click', () => movePokota('left'));
+            moveRightBtn.addEventListener('click', () => movePokota('right'));
+            moveDownBtn.addEventListener('click', () => movePokota('down'));
+
+            // 支援鍵盤控制
+            document.addEventListener('keydown', (event) => {
+                switch (event.key) {
+                    case 'ArrowUp':
+                        movePokota('up');
+                        break;
+                    case 'ArrowDown':
+                        movePokota('down');
+                        break;
+                    case 'ArrowLeft':
+                        movePokota('left');
+                        break;
+                    case 'ArrowRight':
+                        movePokota('right');
+                        break;
+                }
+            });
+
+            renderGame(); // 首次繪製遊戲畫面
+        });
+    </script>
 </body>
 </html>
