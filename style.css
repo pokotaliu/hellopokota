@@ -1,3 +1,4 @@
+/* === 🌙 通用樣式 === */
 * {
   margin: 0;
   padding: 0;
@@ -10,6 +11,13 @@ body {
   overflow: hidden;
 }
 
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* === 🖥 桌機版 UI 面板 === */
 #ui-panel {
   position: absolute;
   top: 10px;
@@ -27,8 +35,10 @@ body {
   cursor: pointer;
   font-size: 14px;
   border-radius: 4px;
+  text-align: center;
 }
 
+/* === 💬 訊息框 === */
 #message-box {
   position: absolute;
   top: 0;
@@ -36,7 +46,6 @@ body {
   width: 260px;
   height: 100vh;
   padding: 10px;
-  box-sizing: border-box;
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.7);
   color: white;
@@ -44,6 +53,7 @@ body {
   font-family: monospace;
   z-index: 20;
   cursor: move;
+  box-sizing: border-box;
 }
 
 .message-line {
@@ -67,12 +77,6 @@ body {
   color: #ffcc66;
 }
 
-canvas {
-  display: block;
-  width: 100vw;
-  height: 100vh;
-}
-
 /* === 📱 手機版優化樣式 === */
 @media (max-width: 768px) {
   #ui-panel {
@@ -82,24 +86,24 @@ canvas {
     width: 100vw;
     background: rgba(0, 0, 0, 0.85);
     display: flex;
-    justify-content: space-around;
     flex-wrap: wrap;
+    justify-content: space-around;
     padding: 8px 0;
     z-index: 100;
   }
 
   .test-btn {
-    width: 46%;
+    flex: none;
+    width: 45%;
     margin: 6px;
     font-size: 16px;
-    padding: 12px 6px;
+    padding: 10px;
     border-radius: 10px;
-    text-align: center;
     background: #444;
     border: 1px solid #888;
     color: white;
+    text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    flex: none;
   }
 
   #message-box {
