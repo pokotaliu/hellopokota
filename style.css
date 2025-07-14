@@ -60,15 +60,53 @@ body {
 .message-info {
   color: #aaffaa;
 }
-
 .message-error {
   color: #ff8888;
 }
-
 .message-warning {
   color: #ffcc66;
 }
 
 canvas {
   display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* === 📱 手機版優化樣式 === */
+@media (max-width: 768px) {
+  #ui-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    padding: 8px;
+    z-index: 100;
+  }
+
+  .test-btn {
+    flex: 1 1 40%;
+    margin: 6px;
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  #message-box {
+    position: fixed;
+    bottom: 60px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: 35vh;
+    font-size: 14px;
+    border-radius: 10px;
+    overflow-y: auto;
+    z-index: 99;
+  }
 }
