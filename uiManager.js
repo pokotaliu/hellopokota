@@ -1,5 +1,3 @@
-// === UI 拖曳控制 ===
-
 function enableDrag(el) {
   let offsetX = 0, offsetY = 0, isDown = false;
 
@@ -21,8 +19,3 @@ function enableDrag(el) {
     el.style.cursor = 'move';
   });
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-  const msgBox = document.getElementById('message-box');
-  enableDrag(msgBox);
-});
