@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>胖波功能測試場</title>
+  <style>
+    body { margin: 0; background: #222; color: white; font-family: sans-serif; }
+    #ui-panel {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+    }
+    .test-btn {
+      margin: 5px;
+      padding: 5px 10px;
+      background: #444;
+      border: 1px solid #888;
+      color: white;
+      cursor: pointer;
+    }
+    #message-box {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 300px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="ui-panel">
+    <button class="test-btn" onclick="runTest('move')">🕹 測試胖波移動</button>
+    <button class="test-btn" onclick="runTest('map')">🗺 載入地圖</button>
+    <button class="test-btn" onclick="runTest('enemy')">👾 生成敵人</button>
+    <button class="test-btn" onclick="runTest('dialog')">💬 顯示訊息框</button>
+  </div>
+  <div id="message-box"></div>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+  <script src="gameFeatures.js"></script>
+  <script src="uiManager.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
