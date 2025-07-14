@@ -37,18 +37,23 @@
 </head>
 <body>
   <div class="mobile-controls">
-    <button onclick="moveLeft()">⬅️</button>
+    <button onmousedown="isLeftPressed = true" onmouseup="isLeftPressed = false"
+            ontouchstart="isLeftPressed = true" ontouchend="isLeftPressed = false">⬅️</button>
     <button onclick="jump()">⬆️</button>
-    <button onclick="moveRight()">➡️</button>
+    <button onmousedown="isRightPressed = true" onmouseup="isRightPressed = false"
+            ontouchstart="isRightPressed = true" ontouchend="isRightPressed = false">➡️</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
   <script>
     let player, cursors, platforms, graphics;
-    let platformSpeed = 1.2;
+    let platformSpeed = 0.5; // 平台下移速度
     let platformGap = 150;
     let lastPlatformY = 600;
     let jumpVelocity = -400;
+
+    let isLeftPressed = false;
+    let isRightPressed = false;
 
     const config = {
       type: Phaser.AUTO,
@@ -76,7 +81,6 @@
     function create() {
       graphics = this.add.graphics();
 
-      // 產生胖波 (用 graphics 畫圓)
       player = this.physics.add.sprite(config.width / 2, config.height - 100, null)
         .setCircle(20)
         .setBounce(0.2)
@@ -87,7 +91,6 @@
         g.fillCircle(player.x, player.y, 20);
       };
 
-      // 平台群組
       platforms = this.physics.add.staticGroup();
       for (let y = config.height - 50; y > -1000; y -= platformGap) {
         let x = Phaser.Math.Between(50, config.width - 100);
@@ -101,22 +104,24 @@
         lastPlatformY = y;
       }
 
-      // 碰撞設定
       this.physics.add.collider(player, platforms);
       cursors = this.input.keyboard.createCursorKeys();
     }
 
     function update() {
-      // 控制方向
-      if (cursors.left?.isDown) {
+      if (cursors.left?.isDown || isLeftPressed) {
         player.setVelocityX(-200);
-      } else if (cursors.right?.isDown) {
+      } else if (cursors.right?.isDown || isRightPressed) {
         player.setVelocityX(200);
       } else {
         player.setVelocityX(0);
       }
 
-      // 畫面往上捲動
+      if (Phaser.Input.Keyboard.JustDown(cursors.up) && player.body.touching.down) {
+        player.setVelocityY(jumpVelocity);
+      }
+
+      // 畫面跟隨胖波
       if (player.y < config.height / 2) {
         const dy = (config.height / 2 - player.y) * 0.05;
         player.y += dy;
@@ -127,7 +132,7 @@
         lastPlatformY += dy;
       }
 
-      // 平台往下移動 & 重生
+      // 平台移動與重生
       platforms.children.iterate((p) => {
         p.y += platformSpeed;
         if (p.y > config.height) {
@@ -138,19 +143,11 @@
         p.refreshBody();
       });
 
-      // 繪圖更新
       graphics.clear();
       player.customDraw(graphics);
       platforms.children.iterate((p) => p.customDraw(graphics));
     }
 
-    // 手機按鈕
-    function moveLeft() {
-      player.setVelocityX(-200);
-    }
-    function moveRight() {
-      player.setVelocityX(200);
-    }
     function jump() {
       if (player.body.touching.down) {
         player.setVelocityY(jumpVelocity);
