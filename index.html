@@ -13,16 +13,15 @@
   <!-- Phaser 與模組腳本 -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
   <script src="uiManager.js"></script>
-  <script src="main.js"></script>
   <script src="messageManager.js"></script>
+  <script src="main.js"></script>
 
-
-  <!-- 測試功能 -->
+  <!-- 功能測試選單與 UI 載入 -->
   <script>
     function runTest(feature) {
       switch (feature) {
         case 'move':
-          showMessage('胖波開始亂跑！');
+          MessageManager.show('胖波開始亂跑！');
           if (window.scene && window.pokota) {
             let dx = Phaser.Math.Between(-1, 1);
             let dy = Phaser.Math.Between(-1, 1);
@@ -31,22 +30,24 @@
           }
           break;
         case 'map':
-          showMessage('🗺 地圖載入中...（尚未實作）');
+          MessageManager.show('🗺 地圖載入中...（尚未實作）');
           break;
         case 'enemy':
-          showMessage('👾 敵人生成完成！（尚未實作）');
+          MessageManager.show('👾 敵人生成完成！（尚未實作）');
           break;
         case 'dialog':
-          showMessage('💬 這是一個測試訊息框唷～');
+          MessageManager.show('💬 這是一個測試訊息框唷～');
           break;
       }
     }
 
-    // 🧠 載入 ui.html 並插入到 #ui-container
+    // 載入 UI 結構後綁定拖曳功能
     fetch('ui.html')
       .then(res => res.text())
       .then(html => {
         document.getElementById('ui-container').innerHTML = html;
+        const msgBox = document.getElementById('message-box');
+        if (msgBox) enableDrag(msgBox);
       });
   </script>
 </body>
