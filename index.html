@@ -2,157 +2,154 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>胖波跳跳樂</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>胖波往上跳！</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <style>
-    html, body {
-      margin: 0;
+    * {
+      box-sizing: border-box;
       padding: 0;
-      background: #111;
+      margin: 0;
+    }
+
+    body {
+      background-color: #111;
       overflow: hidden;
     }
+
     canvas {
       display: block;
     }
-    .mobile-controls {
+
+    #controls {
       position: fixed;
-      bottom: 10px;
-      left: 0;
+      bottom: 20px;
       width: 100%;
       display: flex;
       justify-content: center;
-      gap: 10px;
-      z-index: 99;
+      gap: 16px;
+      z-index: 10;
     }
-    .mobile-controls button {
-      width: 60px;
-      height: 60px;
-      border-radius: 30px;
-      border: none;
-      background: rgba(255,255,255,0.2);
+
+    .ctrl-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #aaa;
       color: white;
       font-size: 24px;
+      text-align: center;
+      line-height: 56px;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .ctrl-btn:active {
+      background: rgba(255, 255, 255, 0.3);
     }
   </style>
 </head>
 <body>
-  <div class="mobile-controls">
-    <button onmousedown="isLeftPressed = true" onmouseup="isLeftPressed = false"
-            ontouchstart="isLeftPressed = true" ontouchend="isLeftPressed = false">⬅️</button>
-    <button onclick="jump()">⬆️</button>
-    <button onmousedown="isRightPressed = true" onmouseup="isRightPressed = false"
-            ontouchstart="isRightPressed = true" ontouchend="isRightPressed = false">➡️</button>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
-  <script>
-    let player, cursors, platforms, graphics;
-    let platformSpeed = 0.5; // 平台下移速度
-    let platformGap = 150;
-    let lastPlatformY = 600;
-    let jumpVelocity = -400;
+<div id="controls">
+  <div class="ctrl-btn" ontouchstart="left=true" ontouchend="left=false">&#8592;</div>
+  <div class="ctrl-btn" ontouchstart="jump=true" ontouchend="jump=false">&#8593;</div>
+  <div class="ctrl-btn" ontouchstart="right=true" ontouchend="right=false">&#8594;</div>
+</div>
 
-    let isLeftPressed = false;
-    let isRightPressed = false;
+<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+<script>
+  let left = false, right = false, jump = false;
 
-    const config = {
-      type: Phaser.AUTO,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      backgroundColor: "#111111",
-      physics: {
-        default: 'arcade',
-        arcade: {
-          gravity: { y: 800 },
-          debug: false
-        }
-      },
-      scene: {
-        preload,
-        create,
-        update
+  const config = {
+    type: Phaser.AUTO,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    backgroundColor: '#111111',
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: { y: 600 },
+        debug: false
       }
-    };
+    },
+    scene: {
+      preload,
+      create,
+      update
+    }
+  };
 
-    const game = new Phaser.Game(config);
+  const game = new Phaser.Game(config);
+  let pokotaContainer;
+  let platforms;
+  let cursors;
+  let isJumping = false;
 
-    function preload() {}
+  function preload() {}
 
-    function create() {
-      graphics = this.add.graphics();
-
-      player = this.physics.add.sprite(config.width / 2, config.height - 100, null)
-        .setCircle(20)
-        .setBounce(0.2)
-        .setCollideWorldBounds(true);
-      player.body.setSize(40, 40, true);
-      player.customDraw = (g) => {
-        g.fillStyle(0xff66cc, 1);
-        g.fillCircle(player.x, player.y, 20);
-      };
-
-      platforms = this.physics.add.staticGroup();
-      for (let y = config.height - 50; y > -1000; y -= platformGap) {
-        let x = Phaser.Math.Between(50, config.width - 100);
-        let p = platforms.create(x, y, null);
-        p.setDisplaySize(100, 20);
-        p.refreshBody();
-        p.customDraw = (g) => {
-          g.fillStyle(0x226633, 1);
-          g.fillRect(p.x - 50, p.y - 10, 100, 20);
-        };
-        lastPlatformY = y;
-      }
-
-      this.physics.add.collider(player, platforms);
-      cursors = this.input.keyboard.createCursorKeys();
+  function create() {
+    // 平台群組
+    platforms = this.physics.add.staticGroup();
+    for (let i = 0; i < 10; i++) {
+      const x = Phaser.Math.Between(50, config.width - 100);
+      const y = config.height - i * 120;
+      const platform = this.add.rectangle(x, y, 100, 20, 0x115533);
+      this.physics.add.existing(platform, true);
+      platforms.add(platform);
     }
 
-    function update() {
-      if (cursors.left?.isDown || isLeftPressed) {
-        player.setVelocityX(-200);
-      } else if (cursors.right?.isDown || isRightPressed) {
-        player.setVelocityX(200);
-      } else {
-        player.setVelocityX(0);
-      }
+    // 胖波圖形（粉紅圓＋大寫P）
+    const pokota = this.add.graphics();
+    pokota.fillStyle(0xff69b4, 1);
+    pokota.fillCircle(0, 0, 20);
 
-      if (Phaser.Input.Keyboard.JustDown(cursors.up) && player.body.touching.down) {
-        player.setVelocityY(jumpVelocity);
-      }
+    const label = this.add.text(-9, -15, 'P', {
+      fontSize: '24px',
+      color: '#000000',
+      fontFamily: 'sans-serif'
+    });
 
-      // 畫面跟隨胖波
-      if (player.y < config.height / 2) {
-        const dy = (config.height / 2 - player.y) * 0.05;
-        player.y += dy;
-        platforms.children.iterate((p) => {
-          p.y += dy;
-          p.refreshBody();
-        });
-        lastPlatformY += dy;
-      }
+    pokotaContainer = this.add.container(config.width / 2, config.height - 100, [pokota, label]);
+    this.physics.add.existing(pokotaContainer);
+    pokotaContainer.body.setCollideWorldBounds(true);
+    pokotaContainer.body.setBounce(0.2);
 
-      // 平台移動與重生
-      platforms.children.iterate((p) => {
-        p.y += platformSpeed;
-        if (p.y > config.height) {
-          p.y = lastPlatformY - platformGap;
-          p.x = Phaser.Math.Between(50, config.width - 100);
-          lastPlatformY = p.y;
-        }
-        p.refreshBody();
-      });
+    this.physics.add.collider(pokotaContainer, platforms);
 
-      graphics.clear();
-      player.customDraw(graphics);
-      platforms.children.iterate((p) => p.customDraw(graphics));
+    // 鏡頭跟著胖波移動
+    this.cameras.main.startFollow(pokotaContainer);
+    this.cameras.main.setLerp(0.1, 0.1);
+  }
+
+  function update() {
+    const body = pokotaContainer.body;
+
+    // 左右移動
+    if (left) {
+      body.setVelocityX(-200);
+    } else if (right) {
+      body.setVelocityX(200);
+    } else {
+      body.setVelocityX(0);
     }
 
-    function jump() {
-      if (player.body.touching.down) {
-        player.setVelocityY(jumpVelocity);
-      }
+    // 跳躍控制（只有站在平台上時才跳）
+    if (jump && body.touching.down && !isJumping) {
+      body.setVelocityY(-400);
+      isJumping = true;
     }
-  </script>
+
+    if (!jump) {
+      isJumping = false;
+    }
+
+    // 平台整體往下移動
+    platforms.children.iterate((platform) => {
+      platform.y += 0.5;
+      platform.body.updateFromGameObject();
+    });
+  }
+</script>
 </body>
 </html>
