@@ -11,11 +11,9 @@
       overflow: hidden;
       background: #000;
     }
-
     canvas {
       display: block;
     }
-
     #controls {
       position: fixed;
       bottom: 20px;
@@ -26,7 +24,6 @@
       gap: 16px;
       z-index: 10;
     }
-
     .ctrl-btn {
       width: 56px;
       height: 56px;
@@ -39,7 +36,6 @@
       line-height: 56px;
       user-select: none;
     }
-
     .ctrl-btn:active {
       background: rgba(255, 255, 255, 0.3);
     }
@@ -47,19 +43,17 @@
 </head>
 <body>
 
-  <!-- 📱 控制按鈕 -->
   <div id="controls">
     <div class="ctrl-btn" id="left">⬅️</div>
     <div class="ctrl-btn" id="jump">⬆️</div>
     <div class="ctrl-btn" id="right">➡️</div>
   </div>
 
-  <!-- Phaser 遊戲引擎 -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
   <script>
     let player, platforms, cursors;
     let leftPressed = false, rightPressed = false, jumpPressed = false;
-    let scrollSpeed = 1;
+    let scrollSpeed = 1.2;
 
     const config = {
       type: Phaser.AUTO,
@@ -88,26 +82,26 @@
     function create() {
       const scene = this;
 
-      platforms = this.physics.add.staticGroup();
+      platforms = this.physics.add.group({ immovable: true, allowGravity: false });
 
-      // 初始平台生成
       for (let i = 0; i < 10; i++) {
-        const x = Phaser.Math.Between(50, config.width - 50);
+        const x = Phaser.Math.Between(50, config.width - 100);
         const y = config.height - i * 120;
-        platforms.create(x, y, 'platform').setScale(0.5).refreshBody();
+        let plat = platforms.create(x, y, 'platform');
+        plat.setScale(0.5).refreshBody();
       }
 
-      // 胖波角色
-      player = this.physics.add.circle(config.width / 2, config.height * 0.7, 20, 0xff88cc);
-      player.body.setCollideWorldBounds(true);
+      // 胖波主角：可愛的粉圓圈圈
+      player = this.add.circle(config.width / 2, config.height * 0.7, 20, 0xff88cc);
+      this.physics.add.existing(player);
       player.body.setBounce(0.2);
+      player.body.setCollideWorldBounds(true);
 
       this.physics.add.collider(player, platforms);
 
-      // 鍵盤控制
       cursors = this.input.keyboard.createCursorKeys();
 
-      // 手機按鈕控制
+      // 手機控制
       document.getElementById('left').addEventListener('touchstart', () => leftPressed = true);
       document.getElementById('left').addEventListener('touchend', () => leftPressed = false);
       document.getElementById('right').addEventListener('touchstart', () => rightPressed = true);
@@ -117,11 +111,9 @@
     }
 
     function update() {
-      if (!player) return;
-
       const body = player.body;
 
-      // 左右控制
+      // 控制左右移動
       if (cursors.left.isDown || leftPressed) {
         body.setVelocityX(-160);
       } else if (cursors.right.isDown || rightPressed) {
@@ -130,21 +122,25 @@
         body.setVelocityX(0);
       }
 
-      // 跳躍
-      const isTouching = body.blocked.down || body.touching.down;
-      if ((cursors.up.isDown || jumpPressed) && isTouching) {
+      // 控制跳躍
+      if ((cursors.up.isDown || jumpPressed) && body.blocked.down) {
         body.setVelocityY(-400);
       }
 
-      // 假裝場景往下滾動（平台下降）
-      platforms.children.iterate(platform => {
-        platform.y += scrollSpeed;
-        if (platform.y > config.height + 50) {
-          platform.y = -Phaser.Math.Between(80, 120);
-          platform.x = Phaser.Math.Between(50, config.width - 50);
-        }
-        platform.refreshBody();
-      });
+      // 當胖波上升到畫面中間以上，場景開始往下捲動
+      if (player.y < config.height * 0.4) {
+        const dy = scrollSpeed;
+
+        player.y += dy;
+        platforms.children.iterate(platform => {
+          platform.y += dy;
+          if (platform.y > config.height + 50) {
+            platform.y = -Phaser.Math.Between(80, 120);
+            platform.x = Phaser.Math.Between(50, config.width - 100);
+          }
+          platform.refreshBody();
+        });
+      }
     }
   </script>
 </body>
