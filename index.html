@@ -7,23 +7,15 @@
 </head>
 <body>
 
-  <!-- 🔘 左上角按鈕列 -->
-  <div id="ui-panel">
-    <button class="test-btn" onclick="runTest('move')">🕹 測試胖波移動</button>
-    <button class="test-btn" onclick="runTest('map')">🗺 載入地圖</button>
-    <button class="test-btn" onclick="runTest('enemy')">👾 生成敵人</button>
-    <button class="test-btn" onclick="runTest('dialog')">💬 顯示訊息框</button>
-  </div>
+  <!-- UI 載入容器 -->
+  <div id="ui-container"></div>
 
-  <!-- 💬 訊息框（右側） -->
-  <div id="message-box"></div>
-
-  <!-- 🚀 載入 Phaser 與 JS 模組 -->
+  <!-- Phaser 與模組腳本 -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
   <script src="uiManager.js"></script>
   <script src="main.js"></script>
 
-  <!-- 🔧 測試功能選單（嵌在這邊最方便） -->
+  <!-- 測試功能 -->
   <script>
     function runTest(feature) {
       switch (feature) {
@@ -47,6 +39,13 @@
           break;
       }
     }
+
+    // 🧠 載入 ui.html 並插入到 #ui-container
+    fetch('ui.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('ui-container').innerHTML = html;
+      });
   </script>
 </body>
 </html>
