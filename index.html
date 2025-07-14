@@ -44,9 +44,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
   <script>
-    let player, cursors;
-    let platforms;
-    let platformSpeed = 1;
+    let player, cursors, platforms, graphics;
+    let platformSpeed = 1.2;
     let platformGap = 150;
     let lastPlatformY = 600;
     let jumpVelocity = -400;
@@ -55,6 +54,7 @@
       type: Phaser.AUTO,
       width: window.innerWidth,
       height: window.innerHeight,
+      backgroundColor: "#111111",
       physics: {
         default: 'arcade',
         arcade: {
@@ -74,34 +74,40 @@
     function preload() {}
 
     function create() {
-      // 胖波角色
+      graphics = this.add.graphics();
+
+      // 產生胖波 (用 graphics 畫圓)
       player = this.physics.add.sprite(config.width / 2, config.height - 100, null)
-        .setDisplaySize(40, 40)
+        .setCircle(20)
         .setBounce(0.2)
         .setCollideWorldBounds(true);
-
-      player.body.setCircle(20);
-      player.setTint(0xff66cc);
+      player.body.setSize(40, 40, true);
+      player.customDraw = (g) => {
+        g.fillStyle(0xff66cc, 1);
+        g.fillCircle(player.x, player.y, 20);
+      };
 
       // 平台群組
       platforms = this.physics.add.staticGroup();
       for (let y = config.height - 50; y > -1000; y -= platformGap) {
         let x = Phaser.Math.Between(50, config.width - 100);
-        platforms.create(x, y, null)
-          .setDisplaySize(100, 20)
-          .refreshBody()
-          .setFillStyle(0x225522);
+        let p = platforms.create(x, y, null);
+        p.setDisplaySize(100, 20);
+        p.refreshBody();
+        p.customDraw = (g) => {
+          g.fillStyle(0x226633, 1);
+          g.fillRect(p.x - 50, p.y - 10, 100, 20);
+        };
+        lastPlatformY = y;
       }
 
       // 碰撞設定
       this.physics.add.collider(player, platforms);
-
-      // 鍵盤操作
       cursors = this.input.keyboard.createCursorKeys();
     }
 
     function update() {
-      // 基本左右移動
+      // 控制方向
       if (cursors.left?.isDown) {
         player.setVelocityX(-200);
       } else if (cursors.right?.isDown) {
@@ -110,31 +116,35 @@
         player.setVelocityX(0);
       }
 
-      // 若跳起來太高，就讓攝影機跟上
+      // 畫面往上捲動
       if (player.y < config.height / 2) {
         const dy = (config.height / 2 - player.y) * 0.05;
         player.y += dy;
-        platforms.children.iterate((platform) => {
-          platform.y += dy;
-          platform.refreshBody();
+        platforms.children.iterate((p) => {
+          p.y += dy;
+          p.refreshBody();
         });
         lastPlatformY += dy;
       }
 
-      // 持續生成新平台與往下移動
-      platforms.children.iterate((platform) => {
-        platform.y += platformSpeed;
-        platform.refreshBody();
-        if (platform.y > config.height) {
-          platform.y = lastPlatformY - platformGap;
-          platform.x = Phaser.Math.Between(50, config.width - 100);
-          lastPlatformY = platform.y;
-          platform.refreshBody();
+      // 平台往下移動 & 重生
+      platforms.children.iterate((p) => {
+        p.y += platformSpeed;
+        if (p.y > config.height) {
+          p.y = lastPlatformY - platformGap;
+          p.x = Phaser.Math.Between(50, config.width - 100);
+          lastPlatformY = p.y;
         }
+        p.refreshBody();
       });
+
+      // 繪圖更新
+      graphics.clear();
+      player.customDraw(graphics);
+      platforms.children.iterate((p) => p.customDraw(graphics));
     }
 
-    // 📱手機按鈕控制
+    // 手機按鈕
     function moveLeft() {
       player.setVelocityX(-200);
     }
