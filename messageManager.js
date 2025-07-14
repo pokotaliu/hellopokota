@@ -1,5 +1,3 @@
-// === 訊息模組 MessageManager ===
-
 const MessageManager = (function () {
   const box = () => document.getElementById('message-box');
 
