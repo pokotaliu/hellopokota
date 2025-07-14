@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>手機樣式測試頁</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #222;
+      font-family: sans-serif;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    #ui-panel {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+    }
+
+    .test-btn {
+      display: inline-block;
+      margin: 4px;
+      padding: 6px 12px;
+      background: #444;
+      border: 1px solid #888;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    /* 📱 手機樣式測試 */
+    @media (max-width: 768px) {
+      body::before {
+        content: "📱 手機版樣式啟用！";
+        background: darkred;
+        color: yellow;
+        display: block;
+        padding: 10px;
+        text-align: center;
+        font-size: 16px;
+      }
+
+      #ui-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100vw;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        padding: 8px 0;
+      }
+
+      .test-btn {
+        flex: none;
+        width: 45%;
+        margin: 6px;
+        font-size: 16px;
+        padding: 12px;
+        border-radius: 10px;
+        background: #444;
+        border: 1px solid #888;
+        color: white;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="ui-panel">
+    <button class="test-btn">按鈕一</button>
+    <button class="test-btn">按鈕二</button>
+    <button class="test-btn">按鈕三</button>
+    <button class="test-btn">按鈕四</button>
+  </div>
+
+</body>
+</html>
