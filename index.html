@@ -3,30 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>胖波冒險：初始畫面</title>
+  <title>胖波地圖修正版</title>
   <style>
     body {
-      background: #222;
+      background: #111;
       margin: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
     }
     canvas {
-      image-rendering: pixelated;
-      border: 3px solid #fff;
+      border: 2px solid white;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="320" height="320"></canvas>
+  <canvas id="gameCanvas" width="256" height="256"></canvas>
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const tileSize = 32;
 
+    // 簡化地圖，使用範圍 0~4
     const map = [
       [1, 1, 1, 1, 1, 1, 1, 1],
       [1, 2, 0, 0, 0, 0, 4, 1],
@@ -58,6 +57,9 @@
           loaded++;
           if (loaded === keys.length) callback();
         };
+        img.onerror = () => {
+          console.error(`圖片載入失敗: ${sources[key]}`);
+        };
       });
     }
 
@@ -65,7 +67,13 @@
       for (let y = 0; y < map.length; y++) {
         for (let x = 0; x < map[y].length; x++) {
           const tile = map[y][x];
-          ctx.drawImage(images[tile], x * tileSize, y * tileSize, tileSize, tileSize);
+          const img = images[tile];
+          if (img) {
+            ctx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize);
+          } else {
+            ctx.fillStyle = "#444";
+            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+          }
         }
       }
     }
