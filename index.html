@@ -2,84 +2,120 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>胖波小地圖</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>胖波的可愛村莊</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      background: #111;
+      background: #fce8f0;
+      font-family: 'Comic Sans MS', cursive;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      margin: 0;
     }
     canvas {
-      border: 2px solid white;
+      border: 4px solid #ff88aa;
+      background: #ccf5d4;
+      image-rendering: pixelated;
+    }
+    .btn-panel {
+      margin-top: 10px;
+    }
+    button {
+      padding: 8px 16px;
+      margin: 5px;
+      font-size: 18px;
+      border-radius: 10px;
+      border: none;
+      background-color: #ffb3d1;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
   </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="256" height="256"></canvas>
-<script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const tileSize = 32;
+  <canvas id="gameCanvas" width="320" height="320"></canvas>
+  <div class="btn-panel">
+    <button onclick="moveLeft()">⬅</button>
+    <button onclick="moveRight()">➡</button>
+  </div>
 
-// 地圖結構
-const map = [
-  [1,1,1,1,1,1,1,1],
-  [1,2,0,0,0,0,4,1],
-  [1,0,1,1,1,0,0,1],
-  [1,0,1,3,1,0,0,1],
-  [1,0,1,0,1,0,0,1],
-  [1,0,0,0,1,0,0,1],
-  [1,1,1,0,0,0,0,1],
-  [1,1,1,1,1,1,1,1],
-];
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-// Base64 內嵌圖片（方塊示意圖）
-const imageSources = {
-  0: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAF0lEQVQYV2NkYGD4z0AEYBxVSFGAAgAxWAS9l1GCyQAAAABJRU5ErkJggg==', // 地板 - 淺灰
-  1: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAHUlEQVQYV2NkQAOzgSgFo2AUjIJRMApGJABDAAGTLAVaUrX0sAAAAASUVORK5CYII=', // 牆 - 深灰
-  2: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAI0lEQVQYV2NkgID/DAwM/8iBgYF+AAEMACwgiMQBvFYAVCAAZF4cQAAAAABJRU5ErkJggg==', // 胖波 - 粉紅
-  3: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkIBIwEqmBgYFRRChgFCNUBRsAMjIAKcMCoQlP7VEAAAAASUVORK5CYII=', // 門 - 黃色
-  4: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAH0lEQVQYV2NkIBIwEqmBgYGJkxUBRMApgAmIhABIAABbNCsmOEAAAAAElFTkSuQmCC'  // 敵人 - 綠色
-};
+    const tileSize = 32;
 
-const images = {};
-function loadImages(sources, callback) {
-  const keys = Object.keys(sources);
-  let loaded = 0;
-  keys.forEach(key => {
-    const img = new Image();
-    img.src = sources[key];
-    img.onload = () => {
-      images[key] = img;
-      loaded++;
-      if (loaded === keys.length) callback();
-    };
-    img.onerror = () => {
-      console.error(`圖片載入錯誤：tile ${key}`);
-    };
-  });
-}
+    // 簡易地圖資料（0: 草地, 1: 小屋）
+    const map = [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ];
 
-function drawMap() {
-  for (let y = 0; y < map.length; y++) {
-    for (let x = 0; x < map[y].length; x++) {
-      const tile = map[y][x];
-      const img = images[tile];
-      if (img) {
-        ctx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize);
-      } else {
-        ctx.fillStyle = "magenta";
-        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+    // 胖波的位置
+    let pokotaX = 4;
+    let pokotaY = 2;
+
+    function drawMap() {
+      for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+          if (map[y][x] === 0) {
+            ctx.fillStyle = "#ccf5d4"; // 草地
+          } else if (map[y][x] === 1) {
+            ctx.fillStyle = "#f7b05b"; // 小屋
+          }
+          ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+        }
       }
     }
-  }
-}
 
-loadImages(imageSources, drawMap);
-</script>
+    function drawPokota() {
+      ctx.beginPath();
+      ctx.arc(
+        pokotaX * tileSize + tileSize / 2,
+        pokotaY * tileSize + tileSize / 2,
+        tileSize / 2 - 4,
+        0,
+        Math.PI * 2
+      );
+      ctx.fillStyle = "pink";
+      ctx.fill();
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillStyle = "white";
+      ctx.fillText("P", pokotaX * tileSize + 9, pokotaY * tileSize + 23);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawMap();
+      drawPokota();
+    }
+
+    function moveLeft() {
+      if (pokotaX > 0) {
+        pokotaX--;
+        draw();
+      }
+    }
+
+    function moveRight() {
+      if (pokotaX < map[0].length - 1) {
+        pokotaX++;
+        draw();
+      }
+    }
+
+    draw();
+  </script>
 </body>
 </html>
