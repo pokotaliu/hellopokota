@@ -4,56 +4,126 @@
   <meta charset="UTF-8" />
   <title>胖波功能測試場</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#222222" />
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1d1d1d;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #ui-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 10px 0;
+      z-index: 100;
+    }
+
+    .test-btn {
+      flex: none;
+      width: 45%;
+      margin: 6px;
+      font-size: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #444;
+      border: 1px solid #888;
+      color: white;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+
+    #message-box {
+      position: fixed;
+      bottom: 60px;
+      left: 10px;
+      right: 10px;
+      width: auto;
+      max-height: 35vh;
+      font-size: 14px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px;
+      overflow-y: auto;
+      font-family: monospace;
+      z-index: 99;
+    }
+
+    .message-line {
+      margin-bottom: 6px;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- UI 載入容器 -->
-  <div id="ui-container"></div>
+  <!-- 按鈕 -->
+  <div id="ui-panel">
+    <button class="test-btn" onclick="showMessage('🕹 胖波移動測試')">按鈕一</button>
+    <button class="test-btn" onclick="showMessage('🗺 地圖載入測試')">按鈕二</button>
+    <button class="test-btn" onclick="showMessage('👾 敵人出現了！（假的）')">按鈕三</button>
+    <button class="test-btn" onclick="showMessage('💬 這是訊息測試框')">按鈕四</button>
+  </div>
 
-  <!-- Phaser 與模組腳本 -->
+  <!-- 訊息框 -->
+  <div id="message-box"></div>
+
+  <!-- Phaser -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
-  <script src="uiManager.js"></script>
-  <script src="messageManager.js"></script>
-  <script src="main.js"></script>
-
-  <!-- 功能測試選單與 UI 載入 -->
   <script>
-    function runTest(feature) {
-      switch (feature) {
-        case 'move':
-          MessageManager.show('胖波開始亂跑！');
-          if (window.scene && window.pokota) {
-            let dx = Phaser.Math.Between(-1, 1);
-            let dy = Phaser.Math.Between(-1, 1);
-            window.pokota.x += dx * 32;
-            window.pokota.y += dy * 32;
-          }
-          break;
-        case 'map':
-          MessageManager.show('🗺 地圖載入中...（尚未實作）');
-          break;
-        case 'enemy':
-          MessageManager.show('👾 敵人生成完成！（尚未實作）');
-          break;
-        case 'dialog':
-          MessageManager.show('💬 這是一個測試訊息框唷～');
-          break;
-      }
+    let game;
+    let pokota;
+    let scene;
+
+    function preload() {}
+
+    function create() {
+      scene = this;
+      this.cameras.main.setBackgroundColor('#1d1d1d');
+      pokota = this.add.circle(100, 100, 20, 0xff88cc);
     }
 
-    fetch('ui.html')
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById('ui-container').innerHTML = html;
-        const msgBox = document.getElementById('message-box');
-        if (msgBox) enableDrag(msgBox);
-        MessageManager.show("🐰 歡迎來到胖波測試場！");
-      })
-      .catch(err => {
-        console.error("載入 UI 發生錯誤：", err);
-      });
+    function update() {}
+
+    game = new Phaser.Game({
+      type: Phaser.AUTO,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: '#1d1d1d',
+      scene: { preload, create, update }
+    });
+
+    window.addEventListener('resize', () => {
+      game.scale.resize(window.innerWidth, window.innerHeight);
+    });
+
+    function showMessage(text) {
+      const msgBox = document.getElementById('message-box');
+      const time = new Date().toLocaleTimeString();
+      msgBox.innerHTML += `<div class="message-line">[${time}] ${text}</div>`;
+      msgBox.scrollTop = msgBox.scrollHeight;
+    }
+
+    // 初始訊息
+    showMessage('🐰 歡迎來到胖波測試場～');
   </script>
 </body>
 </html>
