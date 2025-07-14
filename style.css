@@ -117,5 +117,7 @@ canvas {
     border-radius: 10px;
     overflow-y: auto;
     z-index: 99;
+    
+    padding-bottom: 60px;
   }
 }
