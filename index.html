@@ -2,16 +2,16 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>胖波地圖修正版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>胖波小地圖</title>
   <style>
     body {
       background: #111;
-      margin: 0;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
+      margin: 0;
     }
     canvas {
       border: 2px solid white;
@@ -19,66 +19,67 @@
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="256" height="256"></canvas>
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const tileSize = 32;
+<canvas id="gameCanvas" width="256" height="256"></canvas>
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const tileSize = 32;
 
-    // 簡化地圖，使用範圍 0~4
-    const map = [
-      [1, 1, 1, 1, 1, 1, 1, 1],
-      [1, 2, 0, 0, 0, 0, 4, 1],
-      [1, 0, 1, 1, 1, 0, 0, 1],
-      [1, 0, 1, 3, 1, 0, 0, 1],
-      [1, 0, 1, 0, 1, 0, 0, 1],
-      [1, 0, 0, 0, 1, 0, 0, 1],
-      [1, 1, 1, 0, 0, 0, 0, 1],
-      [1, 1, 1, 1, 1, 1, 1, 1],
-    ];
+// 地圖結構
+const map = [
+  [1,1,1,1,1,1,1,1],
+  [1,2,0,0,0,0,4,1],
+  [1,0,1,1,1,0,0,1],
+  [1,0,1,3,1,0,0,1],
+  [1,0,1,0,1,0,0,1],
+  [1,0,0,0,1,0,0,1],
+  [1,1,1,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1],
+];
 
-    const images = {};
-    const imageSources = {
-      0: "https://i.imgur.com/E1vaz0C.png", // 地板
-      1: "https://i.imgur.com/T1DNo5B.png", // 牆
-      2: "https://i.imgur.com/Sf1cw1U.png", // 胖波
-      3: "https://i.imgur.com/HU8Tts9.png", // 門
-      4: "https://i.imgur.com/GXnmhMo.png"  // 敵人
+// Base64 內嵌圖片（方塊示意圖）
+const imageSources = {
+  0: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAF0lEQVQYV2NkYGD4z0AEYBxVSFGAAgAxWAS9l1GCyQAAAABJRU5ErkJggg==', // 地板 - 淺灰
+  1: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAHUlEQVQYV2NkQAOzgSgFo2AUjIJRMApGJABDAAGTLAVaUrX0sAAAAASUVORK5CYII=', // 牆 - 深灰
+  2: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAI0lEQVQYV2NkgID/DAwM/8iBgYF+AAEMACwgiMQBvFYAVCAAZF4cQAAAAABJRU5ErkJggg==', // 胖波 - 粉紅
+  3: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkIBIwEqmBgYFRRChgFCNUBRsAMjIAKcMCoQlP7VEAAAAASUVORK5CYII=', // 門 - 黃色
+  4: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAH0lEQVQYV2NkIBIwEqmBgYGJkxUBRMApgAmIhABIAABbNCsmOEAAAAAElFTkSuQmCC'  // 敵人 - 綠色
+};
+
+const images = {};
+function loadImages(sources, callback) {
+  const keys = Object.keys(sources);
+  let loaded = 0;
+  keys.forEach(key => {
+    const img = new Image();
+    img.src = sources[key];
+    img.onload = () => {
+      images[key] = img;
+      loaded++;
+      if (loaded === keys.length) callback();
     };
+    img.onerror = () => {
+      console.error(`圖片載入錯誤：tile ${key}`);
+    };
+  });
+}
 
-    function loadImages(sources, callback) {
-      const keys = Object.keys(sources);
-      let loaded = 0;
-      keys.forEach(key => {
-        const img = new Image();
-        img.src = sources[key];
-        img.onload = () => {
-          images[key] = img;
-          loaded++;
-          if (loaded === keys.length) callback();
-        };
-        img.onerror = () => {
-          console.error(`圖片載入失敗: ${sources[key]}`);
-        };
-      });
-    }
-
-    function drawMap() {
-      for (let y = 0; y < map.length; y++) {
-        for (let x = 0; x < map[y].length; x++) {
-          const tile = map[y][x];
-          const img = images[tile];
-          if (img) {
-            ctx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize);
-          } else {
-            ctx.fillStyle = "#444";
-            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-          }
-        }
+function drawMap() {
+  for (let y = 0; y < map.length; y++) {
+    for (let x = 0; x < map[y].length; x++) {
+      const tile = map[y][x];
+      const img = images[tile];
+      if (img) {
+        ctx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize);
+      } else {
+        ctx.fillStyle = "magenta";
+        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
       }
     }
+  }
+}
 
-    loadImages(imageSources, drawMap);
-  </script>
+loadImages(imageSources, drawMap);
+</script>
 </body>
 </html>
