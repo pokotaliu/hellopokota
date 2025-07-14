@@ -20,15 +20,44 @@
       cursor: pointer;
     }
     #message-box {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.6);
-      padding: 10px;
-      border-radius: 8px;
-      max-width: 300px;
-      display: none;
-    }
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 260px;
+  height: 100vh;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 14px;
+  font-family: monospace;
+  z-index: 20;
+}
+
+#message-box {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 260px;
+  height: 100vh;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 14px;
+  font-family: monospace;
+  z-index: 20;
+}
+
+.message-line {
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 4px;
+}
+
+
   </style>
 </head>
 <body>
@@ -44,4 +73,16 @@
   <script src="uiManager.js"></script>
   <script src="main.js"></script>
 </body>
+  <body>
+  <div id="ui-panel">
+    <button class="test-btn" onclick="runTest('move')">🕹 測試胖波移動</button>
+    <button class="test-btn" onclick="runTest('map')">🗺 載入地圖</button>
+    <button class="test-btn" onclick="runTest('enemy')">👾 生成敵人</button>
+    <button class="test-btn" onclick="runTest('dialog')">💬 顯示訊息框</button>
+  </div>
+
+  <!-- 🆕 新增右側訊息框容器 -->
+  <div id="message-box"></div>
+</body>
+
 </html>
