@@ -3,57 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <title>胖波跳跳樂</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     html, body {
       margin: 0;
       padding: 0;
+      background: #111;
       overflow: hidden;
-      background: #000;
     }
     canvas {
       display: block;
     }
-    #controls {
+    .mobile-controls {
       position: fixed;
-      bottom: 20px;
+      bottom: 10px;
       left: 0;
-      right: 0;
+      width: 100%;
       display: flex;
       justify-content: center;
-      gap: 16px;
-      z-index: 10;
+      gap: 10px;
+      z-index: 99;
     }
-    .ctrl-btn {
-      width: 56px;
-      height: 56px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid #aaa;
-      border-radius: 50%;
+    .mobile-controls button {
+      width: 60px;
+      height: 60px;
+      border-radius: 30px;
+      border: none;
+      background: rgba(255,255,255,0.2);
       color: white;
       font-size: 24px;
-      text-align: center;
-      line-height: 56px;
-      user-select: none;
-    }
-    .ctrl-btn:active {
-      background: rgba(255, 255, 255, 0.3);
     }
   </style>
 </head>
 <body>
-
-  <div id="controls">
-    <div class="ctrl-btn" id="left">⬅️</div>
-    <div class="ctrl-btn" id="jump">⬆️</div>
-    <div class="ctrl-btn" id="right">➡️</div>
+  <div class="mobile-controls">
+    <button onclick="moveLeft()">⬅️</button>
+    <button onclick="jump()">⬆️</button>
+    <button onclick="moveRight()">➡️</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
   <script>
-    let player, platforms, cursors;
-    let leftPressed = false, rightPressed = false, jumpPressed = false;
-    let scrollSpeed = 1.2;
+    let player, cursors;
+    let platforms;
+    let platformSpeed = 1;
+    let platformGap = 150;
+    let lastPlatformY = 600;
+    let jumpVelocity = -400;
 
     const config = {
       type: Phaser.AUTO,
@@ -62,7 +58,7 @@
       physics: {
         default: 'arcade',
         arcade: {
-          gravity: { y: 600 },
+          gravity: { y: 800 },
           debug: false
         }
       },
@@ -75,71 +71,79 @@
 
     const game = new Phaser.Game(config);
 
-    function preload() {
-      this.load.image('platform', 'https://labs.phaser.io/assets/sprites/platform.png');
-    }
+    function preload() {}
 
     function create() {
-      const scene = this;
+      // 胖波角色
+      player = this.physics.add.sprite(config.width / 2, config.height - 100, null)
+        .setDisplaySize(40, 40)
+        .setBounce(0.2)
+        .setCollideWorldBounds(true);
 
-      platforms = this.physics.add.group({ immovable: true, allowGravity: false });
+      player.body.setCircle(20);
+      player.setTint(0xff66cc);
 
-      for (let i = 0; i < 10; i++) {
-        const x = Phaser.Math.Between(50, config.width - 100);
-        const y = config.height - i * 120;
-        let plat = platforms.create(x, y, 'platform');
-        plat.setScale(0.5).refreshBody();
+      // 平台群組
+      platforms = this.physics.add.staticGroup();
+      for (let y = config.height - 50; y > -1000; y -= platformGap) {
+        let x = Phaser.Math.Between(50, config.width - 100);
+        platforms.create(x, y, null)
+          .setDisplaySize(100, 20)
+          .refreshBody()
+          .setFillStyle(0x225522);
       }
 
-      // 胖波主角：可愛的粉圓圈圈
-      player = this.add.circle(config.width / 2, config.height * 0.7, 20, 0xff88cc);
-      this.physics.add.existing(player);
-      player.body.setBounce(0.2);
-      player.body.setCollideWorldBounds(true);
-
+      // 碰撞設定
       this.physics.add.collider(player, platforms);
 
+      // 鍵盤操作
       cursors = this.input.keyboard.createCursorKeys();
-
-      // 手機控制
-      document.getElementById('left').addEventListener('touchstart', () => leftPressed = true);
-      document.getElementById('left').addEventListener('touchend', () => leftPressed = false);
-      document.getElementById('right').addEventListener('touchstart', () => rightPressed = true);
-      document.getElementById('right').addEventListener('touchend', () => rightPressed = false);
-      document.getElementById('jump').addEventListener('touchstart', () => jumpPressed = true);
-      document.getElementById('jump').addEventListener('touchend', () => jumpPressed = false);
     }
 
     function update() {
-      const body = player.body;
-
-      // 控制左右移動
-      if (cursors.left.isDown || leftPressed) {
-        body.setVelocityX(-160);
-      } else if (cursors.right.isDown || rightPressed) {
-        body.setVelocityX(160);
+      // 基本左右移動
+      if (cursors.left?.isDown) {
+        player.setVelocityX(-200);
+      } else if (cursors.right?.isDown) {
+        player.setVelocityX(200);
       } else {
-        body.setVelocityX(0);
+        player.setVelocityX(0);
       }
 
-      // 控制跳躍
-      if ((cursors.up.isDown || jumpPressed) && body.blocked.down) {
-        body.setVelocityY(-400);
-      }
-
-      // 當胖波上升到畫面中間以上，場景開始往下捲動
-      if (player.y < config.height * 0.4) {
-        const dy = scrollSpeed;
-
+      // 若跳起來太高，就讓攝影機跟上
+      if (player.y < config.height / 2) {
+        const dy = (config.height / 2 - player.y) * 0.05;
         player.y += dy;
-        platforms.children.iterate(platform => {
+        platforms.children.iterate((platform) => {
           platform.y += dy;
-          if (platform.y > config.height + 50) {
-            platform.y = -Phaser.Math.Between(80, 120);
-            platform.x = Phaser.Math.Between(50, config.width - 100);
-          }
           platform.refreshBody();
         });
+        lastPlatformY += dy;
+      }
+
+      // 持續生成新平台與往下移動
+      platforms.children.iterate((platform) => {
+        platform.y += platformSpeed;
+        platform.refreshBody();
+        if (platform.y > config.height) {
+          platform.y = lastPlatformY - platformGap;
+          platform.x = Phaser.Math.Between(50, config.width - 100);
+          lastPlatformY = platform.y;
+          platform.refreshBody();
+        }
+      });
+    }
+
+    // 📱手機按鈕控制
+    function moveLeft() {
+      player.setVelocityX(-200);
+    }
+    function moveRight() {
+      player.setVelocityX(200);
+    }
+    function jump() {
+      if (player.body.touching.down) {
+        player.setVelocityY(jumpVelocity);
       }
     }
   </script>
