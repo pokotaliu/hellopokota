@@ -2,128 +2,151 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>胖波功能測試場</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>胖波跳跳跳 v2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #111; overflow: hidden; }
+    canvas { display: block; width: 100vw; height: 100vh; }
 
-    body {
-      background: #1d1d1d;
-      font-family: sans-serif;
-      overflow: hidden;
-    }
-
-    canvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    #ui-panel {
+    #game-over {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100vw;
-      background: rgba(0, 0, 0, 0.85);
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-around;
-      padding: 10px 0;
-      z-index: 100;
-    }
-
-    .test-btn {
-      flex: none;
-      width: 45%;
-      margin: 6px;
-      font-size: 16px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #444;
-      border: 1px solid #888;
+      top: 40%;
+      left: 50%;
+      transform: translateX(-50%);
       color: white;
+      font-size: 24px;
+      background: rgba(0,0,0,0.8);
+      padding: 20px;
+      border-radius: 10px;
+      display: none;
+      z-index: 10;
       text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      cursor: pointer;
     }
 
-    #message-box {
+    #controls {
       position: fixed;
-      bottom: 60px;
-      left: 10px;
-      right: 10px;
-      width: auto;
-      max-height: 35vh;
-      font-size: 14px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 10px;
-      overflow-y: auto;
-      font-family: monospace;
-      z-index: 99;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 9;
     }
 
-    .message-line {
-      margin-bottom: 6px;
+    .btn {
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(4px);
+    }
+
+    @media (min-width: 768px) {
+      #controls { display: none; } /* 桌機不顯示按鈕 */
     }
   </style>
 </head>
 <body>
+  <div id="game-over">💀 胖波掉下去了！<br/><br/><button onclick="location.reload()">重新開始</button></div>
 
-  <!-- 按鈕 -->
-  <div id="ui-panel">
-    <button class="test-btn" onclick="showMessage('🕹 胖波移動測試')">按鈕一</button>
-    <button class="test-btn" onclick="showMessage('🗺 地圖載入測試')">按鈕二</button>
-    <button class="test-btn" onclick="showMessage('👾 敵人出現了！（假的）')">按鈕三</button>
-    <button class="test-btn" onclick="showMessage('💬 這是訊息測試框')">按鈕四</button>
+  <!-- 📱 手機操作按鈕 -->
+  <div id="controls">
+    <button class="btn" id="left">⬅️</button>
+    <button class="btn" id="up">⬆️</button>
+    <button class="btn" id="right">➡️</button>
   </div>
 
-  <!-- 訊息框 -->
-  <div id="message-box"></div>
-
-  <!-- Phaser -->
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
   <script>
-    let game;
-    let pokota;
-    let scene;
+    let player, platforms, cursors, camera;
+    let gameOver = false;
+    let moveLeft = false;
+    let moveRight = false;
+    let jump = false;
+
+    const config = {
+      type: Phaser.AUTO,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 800 },
+          debug: false
+        }
+      },
+      scene: {
+        preload,
+        create,
+        update
+      }
+    };
+
+    const game = new Phaser.Game(config);
 
     function preload() {}
 
     function create() {
-      scene = this;
-      this.cameras.main.setBackgroundColor('#1d1d1d');
-      pokota = this.add.circle(100, 100, 20, 0xff88cc);
+      const scene = this;
+      camera = scene.cameras.main;
+
+      // 平台群
+      platforms = scene.physics.add.staticGroup();
+      const pY = [500, 400, 300, 200];
+      pY.forEach((y, i) => {
+        const p = platforms.create(100 + i * 80, y, null).setScale(2.5, 0.5).refreshBody();
+        scene.add.rectangle(p.x, p.y, p.displayWidth, 20, 0x8888ff).setDepth(-1);
+      });
+
+      // 胖波
+      player = scene.physics.add.sprite(200, 100);
+      player.body.setSize(30, 30);
+      player.setBounce(0.2);
+      player.setCollideWorldBounds(false);
+      const pokota = scene.add.circle(0, 0, 15, 0xff88cc);
+      player.pokotaSprite = pokota;
+
+      scene.physics.add.collider(player, platforms);
+
+      cursors = scene.input.keyboard.createCursorKeys();
+
+      // 📱 綁定手機按鈕
+      document.getElementById('left').addEventListener('touchstart', () => moveLeft = true);
+      document.getElementById('left').addEventListener('touchend', () => moveLeft = false);
+      document.getElementById('right').addEventListener('touchstart', () => moveRight = true);
+      document.getElementById('right').addEventListener('touchend', () => moveRight = false);
+      document.getElementById('up').addEventListener('touchstart', () => jump = true);
+      document.getElementById('up').addEventListener('touchend', () => jump = false);
     }
 
-    function update() {}
+    function update() {
+      if (gameOver) return;
 
-    game = new Phaser.Game({
-      type: Phaser.AUTO,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      backgroundColor: '#1d1d1d',
-      scene: { preload, create, update }
-    });
+      player.pokotaSprite.x = player.x;
+      player.pokotaSprite.y = player.y;
 
-    window.addEventListener('resize', () => {
-      game.scale.resize(window.innerWidth, window.innerHeight);
-    });
+      let vx = 0;
+      if (cursors.left.isDown || moveLeft) vx = -200;
+      if (cursors.right.isDown || moveRight) vx = 200;
+      player.setVelocityX(vx);
 
-    function showMessage(text) {
-      const msgBox = document.getElementById('message-box');
-      const time = new Date().toLocaleTimeString();
-      msgBox.innerHTML += `<div class="message-line">[${time}] ${text}</div>`;
-      msgBox.scrollTop = msgBox.scrollHeight;
+      if ((cursors.up.isDown || jump) && player.body.touching.down) {
+        player.setVelocityY(-400);
+      }
+
+      if (player.y < camera.scrollY + 200) {
+        camera.scrollY = player.y - 200;
+      }
+
+      if (player.y > camera.scrollY + config.height + 100) {
+        document.getElementById('game-over').style.display = 'block';
+        gameOver = true;
+      }
     }
-
-    // 初始訊息
-    showMessage('🐰 歡迎來到胖波測試場～');
   </script>
 </body>
 </html>
