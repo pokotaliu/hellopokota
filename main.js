@@ -1,7 +1,32 @@
+let game;
+let pokota;
+let scene;
+
+function preload() {
+  // 這裡可以載入圖片資源（目前沒用）
+}
+
+function create() {
+  scene = this;
+
+  // 背景色
+  this.cameras.main.setBackgroundColor('#1d1d1d');
+
+  // 建立胖波（簡化為一個圓形代表）
+  pokota = this.add.circle(100, 100, 20, 0xff88cc);
+  window.pokota = pokota;
+  window.scene = this;
+}
+
+function update() {
+  // 暫時不需要更新邏輯
+}
+
+// ✅ Phaser 初始化設定（響應式畫布）
 const config = {
   type: Phaser.AUTO,
-  width: window.innerWidth - 260,
-  height: window.innerHeight,
+  width: window.innerWidth,          // 📱 根據裝置寬度設定
+  height: window.innerHeight,        // 📱 根據裝置高度設定
   backgroundColor: '#1d1d1d',
   scene: {
     preload,
@@ -10,24 +35,10 @@ const config = {
   }
 };
 
-const game = new Phaser.Game(config);
-let scene;
-let pokota;
+// ✅ 建立遊戲實例
+game = new Phaser.Game(config);
 
-function preload() {
-  this.load.image('pokota', 'https://dummyimage.com/32x32/ff69b4/000000&text=P');
-}
-
-function create() {
-  scene = this;
-  window.scene = scene;
-
-  pokota = this.add.sprite(200, 200, 'pokota');
-  window.pokota = pokota;
-
-  MessageManager.show('🎮 遊戲啟動，胖波出場啦！');
-}
-
-function update() {
-  // 暫無持續邏輯
-}
+// ✅ 當使用者縮放視窗（或旋轉手機）時自動調整畫布大小
+window.addEventListener('resize', () => {
+  game.scale.resize(window.innerWidth, window.innerHeight);
+});
