@@ -1,37 +1,33 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>胖波俯視角地圖</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>胖波冒險：初始畫面</title>
   <style>
     body {
-      background: #111;
+      background: #222;
       margin: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      overflow: hidden;
     }
     canvas {
-      border: 2px solid #ccc;
-      background: #222;
+      image-rendering: pixelated;
+      border: 3px solid #fff;
     }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="320" height="320"></canvas>
-
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const tileSize = 32;
 
-    const tileSize = 40;
-    const rows = 8;
-    const cols = 8;
-
-    // 0: 空地, 1: 牆, 2: 玩家, 3: 門, 4: 敵人
-    let map = [
+    const map = [
       [1, 1, 1, 1, 1, 1, 1, 1],
       [1, 2, 0, 0, 0, 0, 4, 1],
       [1, 0, 1, 1, 1, 0, 0, 1],
@@ -39,62 +35,42 @@
       [1, 0, 1, 0, 1, 0, 0, 1],
       [1, 0, 0, 0, 1, 0, 0, 1],
       [1, 1, 1, 0, 0, 0, 0, 1],
-      [1, 1, 1, 1, 1, 1, 1, 1]
+      [1, 1, 1, 1, 1, 1, 1, 1],
     ];
 
-    let playerPos = { x: 1, y: 1 };
+    const images = {};
+    const imageSources = {
+      0: "https://i.imgur.com/E1vaz0C.png", // 地板
+      1: "https://i.imgur.com/T1DNo5B.png", // 牆
+      2: "https://i.imgur.com/Sf1cw1U.png", // 胖波
+      3: "https://i.imgur.com/HU8Tts9.png", // 門
+      4: "https://i.imgur.com/GXnmhMo.png"  // 敵人
+    };
 
-    function drawTile(x, y, type) {
-      switch (type) {
-        case 0: ctx.fillStyle = '#333'; break; // 空地
-        case 1: ctx.fillStyle = '#666'; break; // 牆
-        case 2: ctx.fillStyle = 'hotpink'; break; // 玩家
-        case 3: ctx.fillStyle = '#4fc3f7'; break; // 門
-        case 4: ctx.fillStyle = '#f44336'; break; // 敵人
-      }
-      ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-      ctx.strokeStyle = '#000';
-      ctx.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
+    function loadImages(sources, callback) {
+      const keys = Object.keys(sources);
+      let loaded = 0;
+      keys.forEach(key => {
+        const img = new Image();
+        img.src = sources[key];
+        img.onload = () => {
+          images[key] = img;
+          loaded++;
+          if (loaded === keys.length) callback();
+        };
+      });
     }
 
-    function render() {
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          let type = map[y][x];
-          drawTile(x, y, type);
+    function drawMap() {
+      for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+          const tile = map[y][x];
+          ctx.drawImage(images[tile], x * tileSize, y * tileSize, tileSize, tileSize);
         }
       }
     }
 
-    function movePlayer(dx, dy) {
-      let newX = playerPos.x + dx;
-      let newY = playerPos.y + dy;
-
-      if (
-        newX >= 0 && newX < cols &&
-        newY >= 0 && newY < rows &&
-        map[newY][newX] !== 1
-      ) {
-        // 清除舊位置
-        map[playerPos.y][playerPos.x] = 0;
-        playerPos.x = newX;
-        playerPos.y = newY;
-        map[playerPos.y][playerPos.x] = 2;
-
-        render();
-      }
-    }
-
-    document.addEventListener('keydown', (e) => {
-      switch (e.key) {
-        case 'ArrowUp': movePlayer(0, -1); break;
-        case 'ArrowDown': movePlayer(0, 1); break;
-        case 'ArrowLeft': movePlayer(-1, 0); break;
-        case 'ArrowRight': movePlayer(1, 0); break;
-      }
-    });
-
-    render();
+    loadImages(imageSources, drawMap);
   </script>
 </body>
 </html>
