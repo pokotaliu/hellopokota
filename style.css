@@ -10,7 +10,6 @@ body {
   overflow: hidden;
 }
 
-/* 測試按鈕列 */
 #ui-panel {
   position: absolute;
   top: 10px;
@@ -30,7 +29,6 @@ body {
   border-radius: 4px;
 }
 
-/* 🗨️ 右側訊息框 */
 #message-box {
   position: absolute;
   top: 0;
@@ -62,15 +60,15 @@ body {
 .message-info {
   color: #aaffaa;
 }
+
 .message-error {
   color: #ff8888;
 }
+
 .message-warning {
   color: #ffcc66;
 }
 
-
-/* 遊戲畫布 */
 canvas {
   display: block;
 }
