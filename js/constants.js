@@ -16,7 +16,14 @@ export const GAME_CONSTANTS = {
     ZOMBIE_MELEE_DAMAGE: 5,
     ZOMBIE_ATTACK_COOLDOWN: 500,
     POKOTA_SAFE_DISTANCE_TILES: 3, // 胖波與怪物保持的安全距離 (磁磚數)
-    ZOMBIE_ATTACK_RANGE_PX: 1.5 * 32 // 僵屍的攻擊範圍 (像素)
+    ZOMBIE_ATTACK_RANGE_PX: 1.5 * 32, // 僵屍的攻擊範圍 (像素)
+
+    // 新增熊大的常數
+    BROWN_BEAR_MAX_HP: 150, // 熊大血量更高
+    BROWN_BEAR_MOVE_SPEED_PX: 3, // 熊大移動稍慢
+    BROWN_BEAR_MELEE_DAMAGE: 20, // 熊大近戰傷害更高
+    BROWN_BEAR_ATTACK_RANGE_TILES: 1.5, // 熊大近戰攻擊範圍 (磁磚數)
+    BROWN_BEAR_ATTACK_COOLDOWN: 800 // 熊大攻擊冷卻時間
 };
 
 export const gameMapsData = {
