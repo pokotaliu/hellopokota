@@ -224,24 +224,6 @@
         <button id="restartButton">重新開始</button>
     </div>
 
-    <script type="module">
-        // 引入所有模組
-        import { GAME_CONSTANTS } from './constants.js';
-        import { gameMapsData } from './maps.js';
-        import { Map } from './map.js';
-        import { Renderer } from './renderer.js';
-        import { PhysicsEngine } from './physics.js';
-        import { Character } from './character.js';
-        import { PlayerCharacter } from './player_character.js';
-        import { EnemyCharacter } from './enemy_character.js';
-        import { Projectile } from './projectile.js';
-        import { Game } from './game.js';
-
-        // --- 遊戲啟動 ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const game = new Game("gameCanvas", GAME_CONSTANTS, gameMapsData);
-            game.init();
-        });
-    </script>
+    <script type="module" src="./game.js"></script>
 </body>
 </html>
