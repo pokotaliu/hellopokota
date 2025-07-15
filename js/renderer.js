@@ -8,13 +8,13 @@ export class Renderer {
         this.canvas = canvas;
         this.ctx = ctx;
         this.tileSize = tileSize;
-        this.colors = colors;
+        this.colors = colors; // 將由 Map 實例更新
     }
 
     /**
      * 繪製單個草地磁磚
      */
-    _drawGrass(x, y, offsetX, offsetY, grassShadeIndex, mapColors) {
+    _drawGrass(x, y, offsetX, offsetY, grassShadeIndex) {
         const drawX = x * this.tileSize - offsetX;
         const drawY = y * this.tileSize - offsetY;
 
@@ -174,8 +174,8 @@ export class Renderer {
             tileX + this.tileSize / 2, tileY + this.tileSize / 2, this.tileSize * 0.5
         );
         gradient.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
-        gradient.addColorStop(0.5, 'rgba(138, 43, 226, 0.5)');
-        gradient.addColorStop(1, 'rgba(138, 43, 226, 0)');
+        gradient.addColorStop(0.5, this.colors.portalColor + '80'); // 使用傳送門顏色並添加透明度
+        gradient.addColorStop(1, this.colors.portalColor + '00'); // 完全透明
         this.ctx.fillStyle = gradient;
         this.ctx.beginPath();
         this.ctx.arc(tileX + this.tileSize / 2, tileY + this.tileSize / 2, this.tileSize * 0.5, 0, Math.PI * 2);
@@ -183,55 +183,14 @@ export class Renderer {
     }
 
     /**
-     * 繪製僵屍
-     */
-    _drawZombie(zombie, offsetX, offsetY) {
-        const zombieX = zombie.pxX - offsetX;
-        const zombieY = zombie.pxY - offsetY;
-        const bodySize = this.tileSize * 0.7;
-
-        this.ctx.fillStyle = this.colors.zombieBody;
-        this.ctx.fillRect(zombieX + (this.tileSize - bodySize) / 2, zombieY + (this.tileSize - bodySize) / 2, bodySize, bodySize);
-
-        this.ctx.fillStyle = this.colors.zombieEye;
-        this.ctx.fillRect(zombieX + this.tileSize * 0.3, zombieY + this.tileSize * 0.4, 4, 4);
-        this.ctx.fillRect(zombieX + this.tileSize * 0.7 - 4, zombieY + this.tileSize * 0.4, 4, 4);
-
-        const hpBarWidth = bodySize * (zombie.hp / zombie.maxHp);
-        this.ctx.fillStyle = 'red';
-        this.ctx.fillRect(zombieX + (this.tileSize - bodySize) / 2, zombieY + (this.tileSize - bodySize) / 2 - 8, hpBarWidth, 4);
-        this.ctx.strokeStyle = 'black';
-        this.ctx.strokeRect(zombieX + (this.tileSize - bodySize) / 2, zombieY + (this.tileSize - bodySize) / 2 - 8, bodySize, 4);
-    }
-
-    /**
-     * 繪製蘿蔔飛彈
-     */
-    _drawProjectile(projectile, offsetX, offsetY) {
-        const drawX = projectile.x - offsetX;
-        const drawY = projectile.y - offsetY;
-
-        const carrotWidth = this.tileSize * 0.4;
-        const carrotHeight = this.tileSize * 0.7;
-        this.ctx.fillStyle = this.colors.carrotBody;
-        this.ctx.beginPath();
-        this.ctx.moveTo(drawX + carrotWidth / 2, drawY + carrotHeight);
-        this.ctx.lineTo(drawX, drawY + carrotHeight * 0.3);
-        this.ctx.lineTo(drawX + carrotWidth, drawY + carrotHeight * 0.3);
-        this.ctx.closePath();
-        this.ctx.fill();
-
-        this.ctx.fillStyle = this.colors.carrotLeaf;
-        this.ctx.fillRect(drawX + carrotWidth / 2 - 1, drawY, 2, carrotHeight * 0.2);
-    }
-
-    /**
      * 繪製胖波（兔子）角色，包含走路動畫
      */
-    _drawPokota(pokota, offsetX, offsetY, colors) {
-        // 胖波繪圖的中心點 (現在基於單格磁磚的中心)
+    _drawPokota(pokota, offsetX, offsetY) {
+        // 胖波繪圖的中心點 (基於像素座標和磁磚中心的偏移)
         const centerX = pokota.pxX - offsetX + this.tileSize / 2;
         const centerY = pokota.pxY - offsetY + this.tileSize / 2;
+
+        const colors = this.colors; // 使用 Renderer 的顏色配置
 
         // 身體半徑，調整以適應單格大小
         const bodyRadius = this.tileSize * 0.4;
@@ -434,6 +393,39 @@ export class Renderer {
     }
 
     /**
+     * 繪製僵屍 (EnemyCharacter 實例本身有 draw 方法，但這裡保留以便 Renderer 集中調用)
+     */
+    _drawZombie(zombie, offsetX, offsetY) {
+        // 直接調用僵屍實例自身的 draw 方法
+        zombie.draw(this.ctx, offsetX, offsetY, this.colors);
+    }
+
+    /**
+     * 繪製蘿蔔飛彈
+     */
+    _drawProjectile(projectile, offsetX, offsetY) {
+        // 投射物的 pxX, pxY 已經是實際像素位置
+        const drawX = projectile.pxX - offsetX;
+        const drawY = projectile.pxY - offsetY;
+
+        const carrotWidth = this.tileSize * 0.4;
+        const carrotHeight = this.tileSize * 0.7;
+        this.ctx.fillStyle = this.colors.carrotBody;
+        this.ctx.beginPath();
+        // 蘿蔔的繪製中心點在 projectile.pxX, projectile.pxY，所以需要偏移繪製
+        this.ctx.moveTo(drawX + carrotWidth / 2, drawY + carrotHeight / 2 + carrotHeight * 0.4); // 尖端
+        this.ctx.lineTo(drawX + carrotWidth * 0.1, drawY + carrotHeight / 2 - carrotHeight * 0.1);
+        this.ctx.lineTo(drawX + carrotWidth * 0.9, drawY + carrotHeight / 2 - carrotHeight * 0.1);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        this.ctx.fillStyle = this.colors.carrotLeaf;
+        this.ctx.fillRect(drawX + carrotWidth / 2 - 1, drawY + carrotHeight / 2 - carrotHeight * 0.4, 2, carrotHeight * 0.1);
+        this.ctx.fillRect(drawX + carrotWidth / 2 - 5, drawY + carrotHeight / 2 - carrotHeight * 0.35, 2, carrotHeight * 0.08);
+        this.ctx.fillRect(drawX + carrotWidth / 2 + 3, drawY + carrotHeight / 2 - carrotHeight * 0.35, 2, carrotHeight * 0.08);
+    }
+
+    /**
      * 遊戲渲染
      * @param {Map} currentMap - 當前地圖物件
      * @param {PlayerCharacter} player - 玩家角色
@@ -445,18 +437,26 @@ export class Renderer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // 計算鏡頭偏移量，使玩家居中
+        // 玩家的 pxX, pxY 是左上角座標，為了居中，需要加上半個 tile
         const offsetX = player.pxX - this.canvas.width / 2 + this.tileSize / 2;
         const offsetY = player.pxY - this.canvas.height / 2 + this.tileSize / 2;
 
         // 繪製地圖磁磚
-        for (let r = 0; r < currentMap.rows; r++) {
-            for (let c = 0; c < currentMap.cols; c++) {
+        // 只繪製可見區域的磁磚以優化性能
+        const startCol = Math.max(0, Math.floor(offsetX / this.tileSize));
+        const endCol = Math.min(currentMap.cols, Math.ceil((offsetX + this.canvas.width) / this.tileSize));
+        const startRow = Math.max(0, Math.floor(offsetY / this.tileSize));
+        const endRow = Math.min(currentMap.rows, Math.ceil((offsetY + this.canvas.height) / this.tileSize));
+
+
+        for (let r = startRow; r < endRow; r++) {
+            for (let c = startCol; c < endCol; c++) {
                 const tile = currentMap.getTile(c, r);
                 if (!tile) continue;
 
                 switch (tile.type) {
                     case 0: // 草地
-                        this._drawGrass(c, r, offsetX, offsetY, tile.grassShadeIndex, currentMap.colors);
+                        this._drawGrass(c, r, offsetX, offsetY, tile.grassShadeIndex);
                         break;
                     case 1: // 小屋
                         this._drawHouse(c, r, offsetX, offsetY);
@@ -487,35 +487,16 @@ export class Renderer {
 
         // 繪製敵人
         enemies.forEach(enemy => {
+            // 由於 EnemyCharacter 自身有 draw 方法，直接調用即可
             enemy.draw(this.ctx, offsetX, offsetY, this.colors);
         });
 
         // 根據玩家類型繪製角色
         if (player.type === 'pokota') {
-            this._drawPokota(player, offsetX, offsetY, this.colors);
+            this._drawPokota(player, offsetX, offsetY);
         } else if (player.type === 'brownBear') {
-            // 直接呼叫 brownBearCharacter.js 內部的 draw 方法
-            // 由於 brownBearCharacter.js 已經匯入 Character 並定義了 draw 方法，
-            // 這裡只需確保 brownBearCharacter 實例本身有 draw 方法即可。
-            // 為了簡化 Renderer，可以直接呼叫 player.draw()，因為所有角色都應該有 draw 方法
-            // 但如果 Renderer 內部需要對不同角色做差異化處理，可以保留 if/else
-            // 目前 brownBearCharacter.js 中沒有 drawBrownBear，而是直接在其類別中實現 draw()
-            // 所以這裡應該是 player.draw(this.ctx, offsetX, offsetY, this.colors);
-            // 但為了匹配你提供的 _drawBrownBear 函數，我將修改如下
-            this._drawBrownBear(player, offsetX, offsetY, this.colors);
+            // 由於 BrownBearCharacter 自身有 draw 方法，直接調用即可
+            player.draw(this.ctx, offsetX, offsetY, this.colors);
         }
-    }
-
-    /**
-     * 繪製熊大角色
-     * 這個函數應該是在 BrownBearCharacter 類別內部，而不是 Renderer 內部。
-     * 在 Renderer 內重寫 _drawBrownBear 是多餘且不推薦的，因為 BrownBearCharacter 已經有了自己的 draw 方法。
-     * 然而，為了符合你目前提供的 Renderer 檔案中包含這個函數的現狀，我會保留它，
-     * 但請注意最佳實踐是讓角色自己負責繪製，Renderer 只負責調用它們的 draw 方法。
-     */
-    _drawBrownBear(brownBear, offsetX, offsetY, colors) {
-        // 直接調用 brownBear 實例自身的 draw 方法
-        // 這樣可以確保 BrownBearCharacter 中的最新繪圖邏輯被使用
-        brownBear.draw(this.ctx, offsetX, offsetY, colors);
     }
 }
