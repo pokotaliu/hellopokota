@@ -1,4 +1,3 @@
-// js/constants.js
 /**
  * @file 定義遊戲中使用的常數
  */
@@ -77,7 +76,8 @@ export const MAP_DATA = {
         portal: { x: 23, y: 12, targetMapId: 'monsterMap', targetPlayerSpawn: { x: 1, y: 12 } }, // 傳送門位置和目標
         spawnPoints: [], // 村莊地圖沒有僵屍固定生成點
         colors: {
-            grassBase: '#8BC34A', // 淺綠色
+            // !!! 這裡修正了：將 grassBase 改為 grass 陣列 !!!
+            grass: ['#8BC34A', '#7CB342', '#689F38', '#558B2F'], // 淺綠色系列
             grassDetail: '#689F38', // 深綠色點綴
             houseWall: '#8B4513', // SaddleBrown
             houseRoof: '#A52A2A', // Brown
@@ -145,7 +145,8 @@ export const MAP_DATA = {
             { x: 15, y: 18 }, { x: 3, y: 20 }, { x: 20, y: 22 }, { x: 12, y: 10 }
         ],
         colors: {
-            grassBase: '#556B2F', // 深草綠 (代替怪物地圖的地面色)
+            // !!! 這裡修正了：將 grassBase 改為 grass 陣列 !!!
+            grass: ['#556B2F', '#455923', '#354220', '#2B351E'], // 深草綠 (代替怪物地圖的地面色)
             grassDetail: '#354220', // 更深的點綴
             houseWall: '#8B4513',
             houseRoof: '#A52A2A',
