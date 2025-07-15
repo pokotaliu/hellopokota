@@ -4,7 +4,7 @@
  */
 
 import { Character } from './character.js';
-import { GAME_CONSTANTS } from './constants.js';
+import { GAME_CONSTants } from './constants.js';
 
 export class BrownBearCharacter extends Character {
     constructor(x, y, hp, speed, tileSize) {
@@ -22,67 +22,84 @@ export class BrownBearCharacter extends Character {
         const centerX = this.pxX - offsetX + this.tileSize / 2;
         const centerY = this.pxY - offsetY + this.tileSize / 2;
 
-        const bodyWidth = this.tileSize * 0.8;
-        const bodyHeight = this.tileSize * 0.7;
-        const headRadius = this.tileSize * 0.3;
-        const earRadius = this.tileSize * 0.08;
-        const snoutWidth = this.tileSize * 0.25;
-        const snoutHeight = this.tileSize * 0.15;
+        // 調整熊大的尺寸比例，使其更接近 LINE Brown 的圓潤造型
+        const bodyWidth = this.tileSize * 0.85; // 讓身體更寬一點
+        const bodyHeight = this.tileSize * 0.85; // 讓身體更接近正圓
+        const headRadius = this.tileSize * 0.38; // 稍微增大頭部
+        const earRadius = this.tileSize * 0.07; // 耳朵稍小一點
+        const snoutWidth = this.tileSize * 0.28; // 鼻吻部寬度
+        const snoutHeight = this.tileSize * 0.1; // 鼻吻部高度，使其更扁平
 
-        // 身體 (橢圓形)
+        // 身體 (調整位置使其看起來與頭部銜接更自然)
         ctx.fillStyle = colors.brownBearBody;
         ctx.beginPath();
-        ctx.ellipse(centerX, centerY + this.tileSize * 0.1, bodyWidth / 2, bodyHeight / 2, 0, 0, Math.PI * 2);
+        // 身體中心稍微上移，讓整體造型更緊湊
+        ctx.ellipse(centerX, centerY + this.tileSize * 0.05, bodyWidth / 2, bodyHeight / 2, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 頭部
+        // 頭部 (調整中心位置)
+        // 將頭部中心設在 Y 軸上稍微靠上的位置，使其在磁磚內更顯眼
+        const headCenterY = centerY - this.tileSize * 0.15;
         ctx.beginPath();
-        ctx.arc(centerX, centerY - headRadius * 0.5, headRadius, 0, Math.PI * 2);
+        ctx.arc(centerX, headCenterY, headRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // 鼻子 (Snout)
+        // 鼻子 (Snout - 調整位置使其位於頭部較低處)
+        const snoutCenterY = headCenterY + headRadius * 0.55; // 相對於頭部中心的位置
         ctx.fillStyle = colors.brownBearSnout;
         ctx.beginPath();
-        ctx.ellipse(centerX, centerY - headRadius * 0.5 + headRadius * 0.6, snoutWidth / 2, snoutHeight / 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(centerX, snoutCenterY, snoutWidth / 2, snoutHeight / 2, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // 鼻孔
         ctx.fillStyle = colors.brownBearNose;
         ctx.beginPath();
-        ctx.arc(centerX - snoutWidth * 0.1, centerY - headRadius * 0.5 + headRadius * 0.6, 1.5, 0, Math.PI * 2);
-        ctx.arc(centerX + snoutWidth * 0.1, centerY - headRadius * 0.5 + headRadius * 0.6, 1.5, 0, Math.PI * 2);
+        ctx.arc(centerX - snoutWidth * 0.1, snoutCenterY, 1.5, 0, Math.PI * 2);
+        ctx.arc(centerX + snoutWidth * 0.1, snoutCenterY, 1.5, 0, Math.PI * 2);
         ctx.fill();
 
-        // 眼睛
+        // 眼睛 (調整位置使其位於頭部靠上且兩側)
+        const eyeY = headCenterY - headRadius * 0.5; // 相對於頭部中心的位置
         ctx.fillStyle = colors.brownBearEye;
         ctx.beginPath();
-        ctx.arc(centerX - headRadius * 0.4, centerY - headRadius * 0.8, 3, 0, Math.PI * 2);
-        ctx.arc(centerX + headRadius * 0.4, centerY - headRadius * 0.8, 3, 0, Math.PI * 2);
+        ctx.arc(centerX - headRadius * 0.3, eyeY, 2, 0, Math.PI * 2); // 眼睛半徑稍小
+        ctx.arc(centerX + headRadius * 0.3, eyeY, 2, 0, Math.PI * 2); // 眼睛半徑稍小
         ctx.fill();
 
-        // 耳朵
+        // 嘴巴 (關鍵修改：添加直線嘴巴以突顯角度)
+        ctx.strokeStyle = colors.brownBearNose; // 嘴巴顏色和鼻孔相同
+        ctx.lineWidth = 2; // 嘴巴線條粗細
+        ctx.beginPath();
+        // 嘴巴的位置在鼻吻部下方，橫跨一定寬度
+        const mouthY = snoutCenterY + snoutHeight * 0.4; // 位於鼻吻部底部附近
+        ctx.moveTo(centerX - snoutWidth * 0.12, mouthY); // 嘴巴起點
+        ctx.lineTo(centerX + snoutWidth * 0.12, mouthY); // 嘴巴終點
+        ctx.stroke(); // 繪製直線
+
+        // 耳朵 (調整位置使其位於頭部上方兩側)
+        const earY = headCenterY - headRadius * 0.8; // 相對於頭部中心的位置
         ctx.fillStyle = colors.brownBearBody;
         ctx.beginPath();
-        ctx.arc(centerX - headRadius * 0.7, centerY - headRadius * 1.1, earRadius, 0, Math.PI * 2);
-        ctx.arc(centerX + headRadius * 0.7, centerY - headRadius * 1.1, earRadius, 0, Math.PI * 2);
+        ctx.arc(centerX - headRadius * 0.6, earY, earRadius, 0, Math.PI * 2);
+        ctx.arc(centerX + headRadius * 0.6, earY, earRadius, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = colors.brownBearInnerEar;
         ctx.beginPath();
-        ctx.arc(centerX - headRadius * 0.7, centerY - headRadius * 1.1, earRadius * 0.6, 0, Math.PI * 2);
-        ctx.arc(centerX + headRadius * 0.7, centerY - headRadius * 1.1, earRadius * 0.6, 0, Math.PI * 2);
+        ctx.arc(centerX - headRadius * 0.6, earY, earRadius * 0.6, 0, Math.PI * 2);
+        ctx.arc(centerX + headRadius * 0.6, earY, earRadius * 0.6, 0, Math.PI * 2);
         ctx.fill();
 
-        // 腳 (簡單的圓形)
+        // 腳 (簡單的圓形，調整位置使其在身體下方)
         const footRadius = this.tileSize * 0.15;
-        const footY = centerY + this.tileSize * 0.3;
+        const footY = centerY + this.tileSize * 0.25; // 腳的位置調整
         ctx.fillStyle = colors.brownBearBody;
         ctx.beginPath();
         ctx.arc(centerX - bodyWidth * 0.25, footY, footRadius, 0, Math.PI * 2);
         ctx.arc(centerX + bodyWidth * 0.25, footY, footRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // 棍棒 (簡單的長方形)
+        // 棍棒 (簡單的長方形，位置稍微調整)
         ctx.fillStyle = colors.brownBearClub;
         ctx.fillRect(centerX + bodyWidth * 0.3, centerY - this.tileSize * 0.1, this.tileSize * 0.4, 6);
     }
