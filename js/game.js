@@ -3,6 +3,7 @@
  * @file 遊戲主類別，管理遊戲循環和所有子系統
  */
 
+// 確保所有類別定義只存在於其各自的檔案中，這裡只進行匯入。
 import { GAME_CONSTANTS, gameMapsData } from './constants.js';
 import { Character } from './character.js'; // 雖然 Game 不直接使用 Character，但 PlayerCharacter 和 EnemyCharacter 使用
 import { PlayerCharacter } from './playerCharacter.js';
@@ -32,6 +33,7 @@ class Game {
         this.colors = {}; // 儲存所有顏色值
         this._initializeColors();
 
+        // 確保 Renderer 在這裡被正確實例化
         this.renderer = new Renderer(this.canvas, this.ctx, this.tileSize, this.colors);
         this.physicsEngine = new PhysicsEngine(this.tileSize);
 
@@ -316,6 +318,7 @@ class Game {
      * 遊戲渲染
      */
     render() {
+        // 這裡調用 Renderer 實例的 render 方法
         this.renderer.render(this.currentMap, this.player, this.enemies, this.projectiles);
 
         // 更新 UI 顯示
