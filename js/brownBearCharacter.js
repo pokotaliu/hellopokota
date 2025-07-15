@@ -213,4 +213,48 @@ export class BrownBearCharacter extends Character {
             this.targetY = this.y;
         }
     }
+
+    /**
+     * 角色移動
+     * @param {string} direction - 移動方向 ('up', 'down', 'left', 'right')
+     * @param {function} isWalkableFn - 檢查磁磚是否可通行的函數
+     */
+    move(direction, isWalkableFn) {
+        // 判斷是否到達目標磁磚，使用一個小的容差值
+        const targetPxX_current = this.targetX * this.tileSize;
+        const targetPxY_current = this.targetY * this.tileSize;
+
+        const distToTarget = Math.sqrt(
+            Math.pow(targetPxX_current - this.pxX, 2) +
+            Math.pow(targetPxY_current - this.pxY, 2)
+        );
+
+        // 如果距離目標還很遠（大於移動速度），說明仍在移動中，忽略新的輸入
+        if (distToTarget > this.speedPx) {
+            return;
+        }
+
+        let newTargetX = this.targetX;
+        let newTargetY = this.targetY;
+
+        switch (direction) {
+            case 'left':
+                newTargetX = this.targetX - 1;
+                break;
+            case 'right':
+                newTargetX = this.targetX + 1;
+                break;
+            case 'up':
+                newTargetY = this.targetY - 1;
+                break;
+            case 'down':
+                newTargetY = this.targetY + 1;
+                break;
+        }
+
+        if (isWalkableFn(newTargetX, newTargetY)) {
+            this.targetX = newTargetX;
+            this.targetY = newTargetY;
+        }
+    }
 }
