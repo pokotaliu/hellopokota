@@ -58,6 +58,8 @@ class Game {
         console.log("DEBUG: Game constructor - Pokota:", this.pokota);
         console.log("DEBUG: Game constructor - Brown Bear:", this.brownBear);
         console.log("DEBUG: Game constructor - Initial activePlayer:", this.activePlayer);
+        console.log("DEBUG: Game constructor - typeof this.pokota.move:", typeof this.pokota.move);
+        console.log("DEBUG: Game constructor - typeof this.brownBear.move:", typeof this.brownBear.move);
 
 
         this.renderer = new Renderer(this.canvas, this.ctx, this.tileSize, this.colors);
@@ -301,6 +303,8 @@ class Game {
         // DEBUG: 檢查切換後 activePlayer 的狀態
         console.log("DEBUG: After switch - activePlayer:", this.activePlayer);
         console.log("DEBUG: After switch - typeof activePlayer.move:", typeof this.activePlayer.move);
+        console.log("DEBUG: After switch - activePlayer prototype:", Object.getPrototypeOf(this.activePlayer));
+        console.log("DEBUG: After switch - activePlayer prototype's prototype:", Object.getPrototypeOf(Object.getPrototypeOf(this.activePlayer)));
     }
 
     /**
@@ -323,7 +327,8 @@ class Game {
             if (this.activePlayer.type === 'pokota') {
                 this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), this.playerAttack.bind(this), currentTime);
             } else if (this.activePlayer.type === 'brownBear') {
-                this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), this.currentMap.isWalkable.bind(this.currentMap), currentTime); // 熊大 autoCombat 需要 isWalkableFn
+                // 修正：確保為熊大 autoCombat 傳入 isWalkableFn
+                this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), currentTime);
             }
 
             // 如果自動戰鬥模式因沒有敵人而關閉，重新啟用手動控制 (僅胖波會關閉，熊大不會)
