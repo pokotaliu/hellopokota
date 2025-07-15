@@ -54,6 +54,12 @@ class Game {
 
         this.activePlayer = this.pokota; // 預設活躍角色為胖波
 
+        // DEBUG: 檢查角色實例是否正確建立
+        console.log("DEBUG: Game constructor - Pokota:", this.pokota);
+        console.log("DEBUG: Game constructor - Brown Bear:", this.brownBear);
+        console.log("DEBUG: Game constructor - Initial activePlayer:", this.activePlayer);
+
+
         this.renderer = new Renderer(this.canvas, this.ctx, this.tileSize, this.colors);
         this.physicsEngine = new PhysicsEngine(this.tileSize);
 
@@ -291,6 +297,10 @@ class Game {
         } else {
             this._toggleManualControls(true);
         }
+
+        // DEBUG: 檢查切換後 activePlayer 的狀態
+        console.log("DEBUG: After switch - activePlayer:", this.activePlayer);
+        console.log("DEBUG: After switch - typeof activePlayer.move:", typeof this.activePlayer.move);
     }
 
     /**
@@ -457,10 +467,22 @@ class Game {
      */
     _setupEventListeners() {
         // 移動按鈕事件
-        document.getElementById('moveUpBtn').addEventListener('click', () => this.activePlayer.move('up', this.currentMap.isWalkable.bind(this.currentMap)));
-        document.getElementById('moveLeftBtn').addEventListener('click', () => this.activePlayer.move('left', this.currentMap.isWalkable.bind(this.currentMap)));
-        document.getElementById('moveRightBtn').addEventListener('click', () => this.activePlayer.move('right', this.currentMap.isWalkable.bind(this.currentMap)));
-        document.getElementById('moveDownBtn').addEventListener('click', () => this.activePlayer.move('down', this.currentMap.isWalkable.bind(this.currentMap)));
+        document.getElementById('moveUpBtn').addEventListener('click', () => {
+            console.log("DEBUG: Move Up button clicked. activePlayer:", this.activePlayer, "typeof move:", typeof this.activePlayer.move);
+            this.activePlayer.move('up', this.currentMap.isWalkable.bind(this.currentMap));
+        });
+        document.getElementById('moveLeftBtn').addEventListener('click', () => {
+            console.log("DEBUG: Move Left button clicked. activePlayer:", this.activePlayer, "typeof move:", typeof this.activePlayer.move);
+            this.activePlayer.move('left', this.currentMap.isWalkable.bind(this.currentMap));
+        });
+        document.getElementById('moveRightBtn').addEventListener('click', () => {
+            console.log("DEBUG: Move Right button clicked. activePlayer:", this.activePlayer, "typeof move:", typeof this.activePlayer.move);
+            this.activePlayer.move('right', this.currentMap.isWalkable.bind(this.currentMap));
+        });
+        document.getElementById('moveDownBtn').addEventListener('click', () => {
+            console.log("DEBUG: Move Down button clicked. activePlayer:", this.activePlayer, "typeof move:", typeof this.activePlayer.move);
+            this.activePlayer.move('down', this.currentMap.isWalkable.bind(this.currentMap));
+        });
         
         // 生成僵屍按鈕
         document.getElementById('spawnZombieBtn').addEventListener('click', () => this.spawnZombie());
@@ -474,15 +496,19 @@ class Game {
 
             switch (event.key) {
                 case 'ArrowUp':
+                    console.log("DEBUG: ArrowUp pressed. activePlayer:", this.activePlayer, "typeof move:", typeof this.activePlayer.move);
                     this.activePlayer.move('up', this.currentMap.isWalkable.bind(this.currentMap));
                     break;
                 case 'ArrowDown':
+                    console.log("DEBUG: ArrowDown pressed. activePlayer:", this.activePlayer, "typeof move:", typeof this.activePlayer.move);
                     this.activePlayer.move('down', this.currentMap.isWalkable.bind(this.currentMap));
                     break;
                 case 'ArrowLeft':
+                    console.log("DEBUG: ArrowLeft pressed. activePlayer:", this.activePlayer, "typeof move:", typeof this.activePlayer.move);
                     this.activePlayer.move('left', this.currentMap.isWalkable.bind(this.currentMap));
                     break;
                 case 'ArrowRight':
+                    console.log("DEBUG: ArrowRight pressed. activePlayer:", this.activePlayer, "typeof move:", typeof this.activePlayer.move);
                     this.activePlayer.move('right', this.currentMap.isWalkable.bind(this.currentMap));
                     break;
                 case 'z':
