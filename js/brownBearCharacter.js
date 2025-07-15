@@ -9,7 +9,7 @@ import { GAME_CONSTANTS } from './constants.js';
 export class BrownBearCharacter extends Character {
     constructor(x, y, hp, speed, tileSize) {
         super(x, y, hp, speed, tileSize);
-        this.type = 'brownBear'; // 新增 type 屬性，用於區分角色
+        this.type = 'brownBear'; // 設置角色類型
         this.attackRangePx = GAME_CONSTANTS.BROWN_BEAR_ATTACK_RANGE_TILES * tileSize; // 近戰攻擊範圍像素
         this.attackDamage = GAME_CONSTANTS.BROWN_BEAR_MELEE_DAMAGE;
         this.attackCooldown = GAME_CONSTANTS.BROWN_BEAR_ATTACK_COOLDOWN;
@@ -114,7 +114,8 @@ export class BrownBearCharacter extends Character {
     }
 
     /**
-     * 熊大的自動戰鬥 AI (與胖波類似，但攻擊方式不同)
+     * 熊大的自動戰鬥 AI
+     * 熊大作為近戰角色，會主動接近敵人並在攻擊範圍內進行攻擊。
      * @param {Array<EnemyCharacter>} enemies - 敵人陣列
      * @param {function} isWalkableFn - 檢查磁磚是否可通行的函數
      * @param {number} currentTime - 當前時間
@@ -151,39 +152,46 @@ export class BrownBearCharacter extends Character {
                 Math.pow(targetPxY_current - this.pxY, 2)
             );
 
+            // 只有當到達當前目標磁磚時才計算新目標
             if (distToCurrentTarget <= this.speedPx) {
-                // 如果在攻擊範圍內，則停留在原地攻擊
+                // 如果敵人在攻擊範圍內，則停留在原地攻擊
                 if (distToClosestEnemy <= GAME_CONSTANTS.BROWN_BEAR_ATTACK_RANGE_TILES) {
                     nextTargetX = this.x;
                     nextTargetY = this.y;
                 } else {
                     // 靠近敵人
+                    // 優先移動到敵人X或Y方向，取距離較遠的方向
                     if (Math.abs(closestEnemy.x - this.x) > Math.abs(closestEnemy.y - this.y)) {
                         let potentialNextX = this.x + Math.sign(closestEnemy.x - this.x);
                         if (isWalkableFn(potentialNextX, this.y)) {
                             nextTargetX = potentialNextX;
                             nextTargetY = this.y;
                         } else {
+                            // 如果X方向被阻擋，嘗試Y方向
                             let potentialNextY = this.y + Math.sign(closestEnemy.y - this.y);
                             if (isWalkableFn(this.x, potentialNextY)) {
                                 nextTargetX = this.x;
-                                nextTargetY = this.y;
+                                nextTargetY = potentialNextY;
                             } else {
+                                // 兩個方向都無法移動，停留在原地
                                 nextTargetX = this.x;
                                 nextTargetY = this.y;
                             }
                         }
                     } else {
+                        // 優先移動到敵人Y方向
                         let potentialNextY = this.y + Math.sign(closestEnemy.y - this.y);
                         if (isWalkableFn(this.x, potentialNextY)) {
                             nextTargetX = this.x;
                             nextTargetY = potentialNextY;
                         } else {
+                            // 如果Y方向被阻擋，嘗試X方向
                             let potentialNextX = this.x + Math.sign(closestEnemy.x - this.x);
                             if (isWalkableFn(potentialNextX, this.y)) {
                                 nextTargetX = potentialNextX;
                                 nextTargetY = this.y;
                             } else {
+                                // 兩個方向都無法移動，停留在原地
                                 nextTargetX = this.x;
                                 nextTargetY = this.y;
                             }
@@ -200,8 +208,7 @@ export class BrownBearCharacter extends Character {
                 this.lastAttackTime = currentTime;
             }
         } else {
-            // 如果沒有敵人，停止自動戰鬥模式 (熊大在怪物區域會一直處於自動戰鬥)
-            // 在熊大的情況下，如果沒有敵人，它可能會停止移動，但模式不變
+            // 如果沒有敵人，停止移動
             this.targetX = this.x; // 停止移動
             this.targetY = this.y;
         }
