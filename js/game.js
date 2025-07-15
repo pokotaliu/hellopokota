@@ -212,6 +212,7 @@ class Game {
     playerAttack(targetEnemy) {
         if (this.activePlayer.hp <= 0) return;
 
+        console.log(`DEBUG: playerAttack called. Active player type: ${this.activePlayer.type}`);
         if (this.activePlayer.type === 'pokota') {
             // 胖波的遠程攻擊
             const startX = this.activePlayer.pxX + this.tileSize / 2;
@@ -225,6 +226,7 @@ class Game {
             console.log("胖波發射蘿蔔飛彈！");
         } else if (this.activePlayer.type === 'brownBear') {
             // 熊大的近戰攻擊
+            console.log("DEBUG: Calling brownBear.meleeAttack(). Target enemy:", targetEnemy);
             this.activePlayer.meleeAttack(targetEnemy);
         }
     }
@@ -361,6 +363,7 @@ class Game {
                     }
                 });
                 if (closestEnemy) {
+                    console.log("DEBUG: Manual mode - Attempting player attack.");
                     this.playerAttack(closestEnemy); // 調用通用的 playerAttack
                     this.activePlayer.lastAttackTime = currentTime;
                 }
@@ -368,8 +371,10 @@ class Game {
         }
 
         // 更新敵人 AI 和移動
-        this.enemies.forEach(enemy => {
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
             enemy.updateAI(this.activePlayer); // 敵人追蹤活躍玩家
+
             // 僵屍對活躍玩家造成傷害
             const zombieCenterX = enemy.pxX + this.tileSize / 2;
             const zombieCenterY = enemy.pxY + this.tileSize / 2;
@@ -386,7 +391,15 @@ class Game {
                 enemy.lastAttackTime = currentTime;
                 console.log(`${this.activePlayer.type === 'pokota' ? '胖波' : '熊大'}受到傷害！HP: ${this.activePlayer.hp}`);
             }
-        });
+
+            // 檢查敵人是否死亡並移除
+            console.log(`DEBUG: Enemy check for removal - Enemy HP: ${enemy.hp}, ID: ${enemy.id || 'N/A'}`); // 增加敵人ID以便追蹤
+            if (enemy.hp <= 0) {
+                console.log(`DEBUG: Enemy at (${enemy.x}, ${enemy.y}) defeated! Removing from list. Current enemies count: ${this.enemies.length}`);
+                this.enemies.splice(i, 1);
+                console.log(`DEBUG: Enemies count after removal: ${this.enemies.length}`);
+            }
+        }
 
         // 更新投射物位置和碰撞 (僅胖波會發射投射物)
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
@@ -406,10 +419,8 @@ class Game {
                 );
                 if (collisionDist < this.tileSize * 0.5) { // 如果飛彈中心與敵人中心距離小於半個磁磚
                     enemy.takeDamage(p.damage);
-                    if (enemy.hp <= 0) {
-                        this.enemies.splice(j, 1);
-                        console.log("僵屍被擊敗！");
-                    }
+                    console.log(`DEBUG: Projectile hit enemy. Enemy HP after hit: ${enemy.hp}`);
+                    // 敵人死亡的檢查和移除會由外層的敵人更新循環處理
                     hitEnemyIndex = j;
                     break;
                 }
