@@ -16,21 +16,19 @@ export class PlayerCharacter extends Character {
     }
 
     /**
-     * 繪製胖波（兔子）角色，包含走路動畫
-     * (此方法應由 Renderer 類別中的 _drawPokota 實際處理，這裡作為 Character 抽象方法的一部分，
-     * 儘管在 PlayerCharacter 實例中不直接繪製，但為了滿足繼承要求，提供一個空實現或錯誤提示)
+     * 繪製胖波（兔子）角色
+     * 這個方法由 Renderer 調用，Renderer 會根據 player.type 決定調用哪個私有繪圖函數
+     * 因此這個 draw 方法實際可以為空或提供一個抽象提示
      */
     draw(ctx, offsetX, offsetY, colors) {
         // 實際繪製邏輯在 Renderer 中。
-        // 這個方法在這裡可以保持為空，或者如果你希望 Character 類有默認繪製邏輯
-        // 可以在 Character 類中提供一個通用的方塊或圓形繪製，供測試使用。
-        // 由於 Renderer 會直接呼叫 _drawPokota，所以這裡不需要實作繪圖邏輯。
+        // 這個方法在這裡可以保持為空。
     }
 
     /**
      * 胖波的自動戰鬥 AI
      * @param {Array<EnemyCharacter>} enemies - 敵人陣列
-     * @param {function} isWalkableFn - 檢查磁磚是否可通行的函數
+     * @param {function} isWalkableFn - 檢查磁磚是否可通行的函數 (Map.isWalkable)
      * @param {function} attackFn - 攻擊函數 (例如 Game.shootCarrot)
      * @param {number} currentTime - 當前時間
      */
@@ -47,7 +45,7 @@ export class PlayerCharacter extends Character {
         }
 
         let closestEnemy = null;
-        let minDistance = Infinity;
+        let minDistance = Infinity; // 磁磚距離
 
         enemies.forEach(zombie => {
             const dist = Math.sqrt(
@@ -61,19 +59,17 @@ export class PlayerCharacter extends Character {
         });
 
         if (closestEnemy) {
-            const distToClosestEnemy = minDistance;
-
             let nextTargetX = this.x;
             let nextTargetY = this.y;
+            let moved = false;
 
             // 如果敵人在安全距離內，嘗試後退
-            if (distToClosestEnemy < GAME_CONSTANTS.POKOTA_SAFE_DISTANCE_TILES) {
-                let moved = false;
-                // 優先沿著與敵人最遠的軸移動
+            if (minDistance < GAME_CONSTANTS.POKOTA_SAFE_DISTANCE_TILES) {
                 const deltaX = this.x - closestEnemy.x;
                 const deltaY = this.y - closestEnemy.y;
 
-                if (Math.abs(deltaX) >= Math.abs(deltaY)) { // X軸距離更大或相等，優先X軸移動
+                // 嘗試向最遠離敵人的方向移動
+                if (Math.abs(deltaX) >= Math.abs(deltaY)) {
                     const potentialX = this.x + Math.sign(deltaX);
                     if (isWalkableFn(potentialX, this.y)) {
                         nextTargetX = potentialX;
@@ -81,8 +77,7 @@ export class PlayerCharacter extends Character {
                         moved = true;
                     }
                 }
-
-                if (!moved) { // 如果X軸無法移動或Y軸距離更大
+                if (!moved) {
                     const potentialY = this.y + Math.sign(deltaY);
                     if (isWalkableFn(this.x, potentialY)) {
                         nextTargetX = this.x;
@@ -90,10 +85,9 @@ export class PlayerCharacter extends Character {
                         moved = true;
                     }
                 }
-                
-                if (!moved) { // 如果兩個主要方向都無法移動，嘗試其他方向 (繞開障礙)
-                    // 嘗試垂直於主要移動方向的方向
-                    if (Math.abs(deltaX) >= Math.abs(deltaY)) { // 原本想沿X移動，但失敗了，嘗試Y方向
+                // 如果無法直接後退，嘗試橫向移動來繞開障礙
+                if (!moved) {
+                    if (Math.abs(deltaX) >= Math.abs(deltaY)) { // 曾想沿X移動，現在嘗試Y
                         const potentialY1 = this.y + 1;
                         const potentialY2 = this.y - 1;
                         if (isWalkableFn(this.x, potentialY1)) {
@@ -105,7 +99,7 @@ export class PlayerCharacter extends Character {
                             nextTargetY = potentialY2;
                             moved = true;
                         }
-                    } else { // 原本想沿Y移動，但失敗了，嘗試X方向
+                    } else { // 曾想沿Y移動，現在嘗試X
                         const potentialX1 = this.x + 1;
                         const potentialX2 = this.x - 1;
                         if (isWalkableFn(potentialX1, this.y)) {
@@ -119,18 +113,12 @@ export class PlayerCharacter extends Character {
                         }
                     }
                 }
-                // 如果所有方向都無法後退，則停留在原地，準備攻擊或受擊
-                if (!moved) {
-                    nextTargetX = this.x;
-                    nextTargetY = this.y;
-                }
-            } else if (distToClosestEnemy > GAME_CONSTANTS.ZOMBIE_ATTACK_RANGE_TILES) {
-                // 如果敵人太遠，靠近一點
-                let moved = false;
+            } else if (minDistance > GAME_CONSTANTS.ZOMBIE_ATTACK_RANGE_TILES) { // 如果敵人太遠，靠近一點
                 const deltaX = closestEnemy.x - this.x;
                 const deltaY = closestEnemy.y - this.y;
 
-                if (Math.abs(deltaX) >= Math.abs(deltaY)) { // 優先X軸移動
+                // 嘗試向最近敵人的方向移動
+                if (Math.abs(deltaX) >= Math.abs(deltaY)) {
                     const potentialX = this.x + Math.sign(deltaX);
                     if (isWalkableFn(potentialX, this.y)) {
                         nextTargetX = potentialX;
@@ -138,8 +126,7 @@ export class PlayerCharacter extends Character {
                         moved = true;
                     }
                 }
-
-                if (!moved) { // 如果X軸無法移動或Y軸距離更大
+                if (!moved) {
                     const potentialY = this.y + Math.sign(deltaY);
                     if (isWalkableFn(this.x, potentialY)) {
                         nextTargetX = this.x;
@@ -147,21 +134,21 @@ export class PlayerCharacter extends Character {
                         moved = true;
                     }
                 }
-
-                if (!moved) { // 如果兩個主要方向都無法移動，嘗試其他方向 (繞開障礙)
-                    if (Math.abs(deltaX) >= Math.abs(deltaY)) { // 原本想沿X移動，但失敗了，嘗試Y方向
+                // 如果無法直接靠近，嘗試橫向移動來繞開障礙
+                if (!moved) {
+                    if (Math.abs(deltaX) >= Math.abs(deltaY)) { // 曾想沿X移動，現在嘗試Y
                         const potentialY1 = this.y + 1;
                         const potentialY2 = this.y - 1;
                         if (isWalkableFn(this.x, potentialY1)) {
-                            nextTargetX = this.x;
-                            nextTargetY = potentialY1;
+                            nextTargetX = potentialY1;
+                            nextTargetY = this.y; // 這裡應該是 Y 軸移動，所以 Y 改變，X 不變
                             moved = true;
                         } else if (isWalkableFn(this.x, potentialY2)) {
                             nextTargetX = this.x;
                             nextTargetY = potentialY2;
                             moved = true;
                         }
-                    } else { // 原本想沿Y移動，但失敗了，嘗試X方向
+                    } else { // 曾想沿Y移動，現在嘗試X
                         const potentialX1 = this.x + 1;
                         const potentialX2 = this.x - 1;
                         if (isWalkableFn(potentialX1, this.y)) {
@@ -175,26 +162,26 @@ export class PlayerCharacter extends Character {
                         }
                     }
                 }
-                if (!moved) {
-                    nextTargetX = this.x;
-                    nextTargetY = this.y;
-                }
-
-            } else { // 在最佳攻擊範圍內，停留在原地
+            } else { // 在最佳攻擊範圍內 (非安全距離且非太遠)，停留在原地
                 nextTargetX = this.x;
                 nextTargetY = this.y;
+                moved = true; // 視為已處理移動，但實際是原地不動
             }
-            
-            // 只有當新的目標磁磚與當前目標磁磚不同時才更新目標
+
+            // 更新目標位置並標記為移動中
             if (nextTargetX !== this.targetX || nextTargetY !== this.targetY) {
-                 this.targetX = nextTargetX;
-                 this.targetY = nextTargetY;
-                 this.isMoving = true; // 設置為移動中
+                this.targetX = nextTargetX;
+                this.targetY = nextTargetY;
+                this.isMoving = true;
+                this.animationTimer = 0; // 重置動畫計時器
+            } else if (!moved) { // 如果沒有實際移動，但 AI 嘗試了移動
+                this.isMoving = false; // 確保動畫停止
             }
 
 
             // 攻擊最近的敵人 (如果距離在攻擊範圍內且冷卻時間已過)
-            if (distToClosestEnemy <= GAME_CONSTANTS.ZOMBIE_ATTACK_RANGE_TILES && currentTime - this.lastAttackTime > GAME_CONSTANTS.ATTACK_INTERVAL) {
+            // ZOMBIE_ATTACK_RANGE_TILES 雖然是僵屍的攻擊範圍，但這裡用來表示胖波的攻擊距離
+            if (minDistance <= GAME_CONSTANTS.ZOMBIE_ATTACK_RANGE_TILES && currentTime - this.lastAttackTime > GAME_CONSTANTS.ATTACK_INTERVAL) {
                 attackFn(closestEnemy); // 呼叫傳入的攻擊函數
                 this.lastAttackTime = currentTime;
             }
