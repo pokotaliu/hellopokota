@@ -105,11 +105,16 @@ export class BrownBearCharacter extends Character {
             Math.pow(playerCenterY - enemyCenterY, 2)
         );
 
+        console.log(`DEBUG: BrownBear meleeAttack - dist: ${dist.toFixed(2)}px, attackRangePx: ${this.attackRangePx.toFixed(2)}px`);
+        console.log(`DEBUG: BrownBear meleeAttack - targetEnemy HP before: ${targetEnemy.hp}`);
+
         if (dist <= this.attackRangePx) {
             targetEnemy.takeDamage(this.attackDamage);
             console.log(`熊大對僵屍造成 ${this.attackDamage} 傷害！`);
+            console.log(`DEBUG: BrownBear meleeAttack - targetEnemy HP after: ${targetEnemy.hp}`);
             return true;
         }
+        console.log("DEBUG: BrownBear meleeAttack - Enemy out of range.");
         return false;
     }
 
@@ -146,6 +151,7 @@ export class BrownBearCharacter extends Character {
             let nextTargetY = this.y;
 
             // 判斷是否到達當前目標磁磚 (使用磁磚座標判斷，更可靠)
+            // 如果當前位置與目標位置相同，表示已到達目標，可以計算新目標
             if (this.x === this.targetX && this.y === this.targetY) {
                 // 如果敵人在攻擊範圍內，則停留在原地攻擊
                 if (distToClosestEnemy <= GAME_CONSTANTS.BROWN_BEAR_ATTACK_RANGE_TILES) {
@@ -193,17 +199,22 @@ export class BrownBearCharacter extends Character {
                 }
                 this.targetX = nextTargetX;
                 this.targetY = nextTargetY;
+                // DEBUG: 熊大自動戰鬥移動目標
+                console.log(`DEBUG: BrownBear autoCombat - New target: (${this.targetX}, ${this.targetY})`);
             }
 
             // 攻擊最近的敵人 (如果距離在攻擊範圍內且冷卻時間已過)
             if (distToClosestEnemy <= GAME_CONSTANTS.BROWN_BEAR_ATTACK_RANGE_TILES && currentTime - this.lastAttackTime > this.attackCooldown) {
+                console.log("DEBUG: BrownBear autoCombat - Attempting melee attack.");
                 this.meleeAttack(closestEnemy);
                 this.lastAttackTime = currentTime;
             }
         } else {
-            // 如果沒有敵人，停止移動
+            // 如果沒有敵人，停止移動並關閉自動戰鬥模式
             this.targetX = this.x; // 停止移動
             this.targetY = this.y;
+            this.isAutoCombatMode = false; // 新增：沒有敵人時關閉自動戰鬥模式
+            console.log("DEBUG: BrownBear autoCombat - No enemies found, stopping movement and exiting auto-combat mode.");
         }
     }
 }
