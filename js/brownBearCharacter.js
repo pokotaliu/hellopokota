@@ -167,7 +167,7 @@ export class BrownBearCharacter extends Character {
                             let potentialNextY = this.y + Math.sign(closestEnemy.y - this.y);
                             if (isWalkableFn(this.x, potentialNextY)) {
                                 nextTargetX = this.x;
-                                nextTargetY = potentialNextY;
+                                nextTargetY = this.y;
                             } else {
                                 nextTargetX = this.x;
                                 nextTargetY = this.y;
