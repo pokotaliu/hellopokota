@@ -22,8 +22,8 @@ export const GAME_CONSTANTS = {
     BROWN_BEAR_MAX_HP: 150, // 熊大血量更高
     BROWN_BEAR_MOVE_SPEED_PX: 3, // 熊大移動稍慢
     BROWN_BEAR_MELEE_DAMAGE: 20, // 熊大近戰傷害更高
-    BROWN_BEAR_ATTACK_RANGE_TILES: 1.5, // 熊大近戰攻擊範圍 (磁磚數)
-    BROWN_BEAR_ATTACK_COOLDOWN: 800 // 熊大攻擊冷卻時間
+    BROWN_BEAR_ATTACK_RANGE_TILES: 2.0, // 熊大近戰攻擊範圍 (磁磚數), 增加到 2.0
+    BROWN_BEAR_ATTACK_COOLDOWN: 500 // 熊大攻擊冷卻時間, 減少到 500ms (與胖波相同，但傷害更高)
 };
 
 export const gameMapsData = {
