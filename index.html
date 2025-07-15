@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>波兔村莊：精美華麗 Canvas 版</title>
+    <title>波兔村莊：Canvas 華麗版 (增強)</title>
     <style>
         /* 整體佈局 */
         body {
@@ -253,6 +253,7 @@
         const BASE_MAP_WIDTH = 1000; // 設計時的基準寬度
         const BASE_MAP_HEIGHT = 700; // 設計時的基準高度
         let scaleFactor = 1; // 根據實際 Canvas 尺寸調整的縮放比例
+        let animationTime = 0; // 用於控制動畫的時間
 
         // Particle System for Fireflies
         const fireflies = [];
@@ -435,55 +436,166 @@
             ctx.stroke();
         }
 
-        function drawTree(x, y, size, trunkColor, leafColor) {
-            // Trunk
-            drawRect(x - size * 0.1, y + size * 0.3, size * 0.2, size * 0.7, trunkColor);
-            // Leaves (複雜形狀)
-            ctx.fillStyle = leafColor;
-            ctx.beginPath();
-            ctx.moveTo(x * scaleFactor, y * scaleFactor);
-            ctx.bezierCurveTo((x - size * 0.4) * scaleFactor, (y + size * 0.1) * scaleFactor,
-                             (x - size * 0.3) * scaleFactor, (y + size * 0.5) * scaleFactor,
-                             (x - size * 0.1) * scaleFactor, (y + size * 0.6) * scaleFactor);
-            ctx.bezierCurveTo((x + size * 0.1) * scaleFactor, (y + size * 0.7) * scaleFactor,
-                             (x + size * 0.3) * scaleFactor, (y + size * 0.7) * scaleFactor,
-                             (x + size * 0.4) * scaleFactor, (y + size * 0.6) * scaleFactor);
-            ctx.bezierCurveTo((x + size * 0.6) * scaleFactor, (y + size * 0.5) * scaleFactor,
-                             (x + size * 0.5) * scaleFactor, (y + size * 0.1) * scaleFactor,
-                             x * scaleFactor, y * scaleFactor);
-            ctx.closePath();
-            ctx.fill();
-        }
+        // 多樣化樹木繪圖函數
+        function drawTree(x, y, type, size = 1) {
+            ctx.save();
+            ctx.translate(x * scaleFactor, y * scaleFactor);
+            ctx.scale(size * scaleFactor, size * scaleFactor);
 
-        function drawRiver(ctx, points, width) {
-            const riverGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            riverGradient.addColorStop(0, '#4fc3f7');
-            riverGradient.addColorStop(1, '#29b6f6');
-
-            ctx.strokeStyle = riverGradient;
-            ctx.lineWidth = width * scaleFactor;
-            ctx.lineCap = 'round'; // 圓頭
-            ctx.lineJoin = 'round'; // 圓角連接
-            ctx.beginPath();
-            ctx.moveTo(points[0].x * scaleFactor, points[0].y * scaleFactor);
-            for (let i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x * scaleFactor, points[i].y * scaleFactor);
+            if (type === 'round') { // 圓形樹
+                // Trunk
+                ctx.fillStyle = '#8d6e63';
+                ctx.fillRect(-10, 30, 20, 70);
+                // Leaves
+                ctx.fillStyle = '#4caf50';
+                ctx.beginPath();
+                ctx.arc(0, 20, 30, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (type === 'pine') { // 松樹
+                // Trunk
+                ctx.fillStyle = '#8d6e63';
+                ctx.fillRect(-8, 40, 16, 60);
+                // Leaves
+                ctx.fillStyle = '#1b5e20';
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-35, 45);
+                ctx.lineTo(-20, 40);
+                ctx.lineTo(-30, 70);
+                ctx.lineTo(0, 50);
+                ctx.lineTo(30, 70);
+                ctx.lineTo(20, 40);
+                ctx.lineTo(35, 45);
+                ctx.closePath();
+                ctx.fill();
+            } else if (type === 'bush') { // 灌木
+                ctx.fillStyle = '#689f38';
+                ctx.beginPath();
+                ctx.arc(-15, 20, 20, 0, Math.PI * 2);
+                ctx.arc(15, 20, 25, 0, Math.PI * 2);
+                ctx.arc(0, 10, 22, 0, Math.PI * 2);
+                ctx.fill();
             }
-            ctx.stroke();
+            ctx.restore();
         }
+
+        // 蘿蔔田繪圖函數
+        function drawCarrotPatch(x, y, width, height) {
+            drawRect(x, y, width, height, '#c5e1a5', '#7cb342', 2); // 田地
+
+            // 繪製多個蘿蔔，並模擬輕微的隨機性
+            const carrotSize = 10;
+            const carrotSpacingX = 15;
+            const carrotSpacingY = 18;
+
+            for (let row = 0; row < height / carrotSpacingY; row++) {
+                for (let col = 0; col < width / carrotSpacingX; col++) {
+                    const cx = x + col * carrotSpacingX + carrotSize / 2 + (Math.random() - 0.5) * 5;
+                    const cy = y + row * carrotSpacingY + carrotSize / 2 + (Math.random() - 0.5) * 5;
+
+                    // 蘿蔔身體 (橙色)
+                    ctx.fillStyle = '#fb8c00';
+                    ctx.beginPath();
+                    ctx.moveTo(cx * scaleFactor, (cy + carrotSize) * scaleFactor);
+                    ctx.lineTo((cx - carrotSize / 2) * scaleFactor, cy * scaleFactor);
+                    ctx.lineTo((cx + carrotSize / 2) * scaleFactor, cy * scaleFactor);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // 蘿蔔葉子 (綠色)
+                    ctx.fillStyle = '#4caf50';
+                    ctx.beginPath();
+                    ctx.arc(cx * scaleFactor, (cy - carrotSize / 4) * scaleFactor, carrotSize / 3 * scaleFactor, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // 池塘繪圖函數
+        function drawPond(x, y, width, height) {
+            ctx.save();
+            ctx.translate(x * scaleFactor, y * scaleFactor);
+            ctx.scale(scaleFactor, scaleFactor);
+
+            // 主體 (橢圓形或不規則形狀)
+            const pondGradient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) / 2);
+            pondGradient.addColorStop(0, '#81d4fa'); // 淺藍
+            pondGradient.addColorStop(1, '#0288d1'); // 深藍
+            ctx.fillStyle = pondGradient;
+            ctx.beginPath();
+            ctx.ellipse(width / 2, height / 2, width / 2, height / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 水面波紋 (簡單的動畫效果)
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                const waveOffset = Math.sin(animationTime * 0.05 + i * 0.5) * 5; // 波動偏移
+                ctx.beginPath();
+                ctx.ellipse(width / 2, height / 2, width / 2 - i * 5, height / 2 - i * 3, Math.PI / 4, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        // 村民繪圖函數 (簡單的火柴人或卡通人物)
+        function drawVillager(x, y, size, type = 'boy', animationPhase = 0) {
+            ctx.save();
+            ctx.translate(x * scaleFactor, y * scaleFactor);
+            ctx.scale(size * scaleFactor, size * scaleFactor);
+
+            // 頭部
+            ctx.fillStyle = '#ffdbac'; // 膚色
+            ctx.beginPath();
+            ctx.arc(0, -25, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 身體
+            ctx.fillStyle = '#64b5f6'; // 藍色上衣
+            if (type === 'girl') {
+                ctx.fillStyle = '#ffab91'; // 粉色裙子
+            }
+            ctx.fillRect(-10, -15, 20, 30);
+
+            // 腿 (簡單的左右擺動)
+            const legOffset = Math.sin(animationPhase * 0.1) * 3;
+            ctx.fillStyle = '#8d6e63'; // 褲子/腿顏色
+            ctx.fillRect(-8 - legOffset, 15, 7, 15);
+            ctx.fillRect(1 + legOffset, 15, 7, 15);
+
+            // 胳膊
+            ctx.fillRect(-15, -10, 5, 20);
+            ctx.fillRect(10, -10, 5, 20);
+
+            // 頭髮/帽子
+            if (type === 'boy') {
+                ctx.fillStyle = '#4e342e'; // 棕色頭髮
+                ctx.beginPath();
+                ctx.arc(0, -30, 12, 0, Math.PI, true);
+                ctx.fill();
+            } else if (type === 'girl') {
+                ctx.fillStyle = '#f48fb1'; // 粉色蝴蝶結
+                drawCircle(-5, -35, 3, ctx.fillStyle);
+                drawCircle(5, -35, 3, ctx.fillStyle);
+            }
+
+            ctx.restore();
+        }
+
 
         // --- 繪製完整的波兔村地圖 ---
         function drawVillageMapCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
 
-            // 1. 背景層 (Grass, Roads, River)
+            // 1. 背景層 (Grass, Roads, River, Pond, Carrot Patch)
             // 草地背景已經是 Canvas 的背景色了
             
             // 道路
             drawRect(0, BASE_MAP_HEIGHT * 0.5 - 20, BASE_MAP_WIDTH, 40, '#a1887f'); // 橫向主路
             drawRect(BASE_MAP_WIDTH * 0.4 - 20, 0, 40, BASE_MAP_HEIGHT, '#a1887f'); // 縱向主路
 
-            // 河流
+            // 河流 (更寬闊)
             const riverPoints = [
                 { x: 0, y: BASE_MAP_HEIGHT * 0.7 },
                 { x: BASE_MAP_WIDTH * 0.25, y: BASE_MAP_HEIGHT * 0.8 },
@@ -491,7 +603,26 @@
                 { x: BASE_MAP_WIDTH * 0.75, y: BASE_MAP_HEIGHT * 0.8 },
                 { x: BASE_MAP_WIDTH, y: BASE_MAP_HEIGHT * 0.7 }
             ];
-            drawRiver(ctx, riverPoints, 30); // 藍色河流
+            drawRiver(ctx, riverPoints, 50); // 藍色河流
+
+            // 池塘
+            const pondX = BASE_MAP_WIDTH * 0.15;
+            const pondY = BASE_MAP_HEIGHT * 0.6;
+            const pondW = 150;
+            const pondH = 100;
+            drawPond(pondX, pondY, pondW, pondH);
+            locations.push({ name: '村莊池塘', x: pondX, y: pondY, width: pondW, height: pondH });
+
+            // 蘿蔔田 (代替了原胖波農場的畫法，現在更像蘿蔔田)
+            const carrotPatchX = BASE_MAP_WIDTH * 0.65;
+            const carrotPatchY = BASE_MAP_HEIGHT * 0.6;
+            const carrotPatchW = 200;
+            const carrotPatchH = 120;
+            drawCarrotPatch(carrotPatchX, carrotPatchY, carrotPatchW, carrotPatchH);
+            drawHouse(carrotPatchX + carrotPatchW * 0.75, carrotPatchY + carrotPatchH * 0.2, carrotPatchW * 0.2, carrotPatchH * 0.4, '#a7ffeb', '#4db6ac', '#4e342e', '#e0f2f7'); // 農場小屋
+            drawText('胖波農場', carrotPatchX + carrotPatchW / 2, carrotPatchY + carrotPatchH * 0.5, '#424242', '20px 微軟正黑體', true);
+            locations.push({ name: '胖波農場', x: carrotPatchX, y: carrotPatchY, width: carrotPatchW, height: carrotPatchH });
+
 
             // 2. 中景層 (Buildings, Trees)
             locations = []; // 清空之前的熱區
@@ -521,38 +652,30 @@
             locations.push({ name: '熊大鐵匠鋪', x: blacksmithX, y: blacksmithY, width: blacksmithW, height: blacksmithH });
 
             // 我的小屋 (更精緻的屋子)
-            const homeX = BASE_MAP_WIDTH * 0.2;
-            const homeY = BASE_MAP_HEIGHT * 0.7;
+            const homeX = BASE_MAP_WIDTH * 0.25;
+            const homeY = BASE_MAP_HEIGHT * 0.48; // 位置調整，避開池塘
             const homeW = 110;
             const homeH = 130;
             drawHouse(homeX, homeY, homeW, homeH, '#f8bbd0', '#e57373', '#6d4c41', '#bbdefb');
             locations.push({ name: '我的小屋', x: homeX, y: homeY, width: homeW, height: homeH });
 
-            // 胖波農場 (簡單的田地和小屋)
-            const farmX = BASE_MAP_WIDTH * 0.65;
-            const farmY = BASE_MAP_HEIGHT * 0.6;
-            const farmW = 200;
-            const farmH = 150;
-            drawRect(farmX, farmY, farmW, farmH, '#c5e1a5', '#7cb342', 3); // 農田
-            drawHouse(farmX + farmW * 0.75, farmY + farmH * 0.2, farmW * 0.2, farmH * 0.4, '#a7ffeb', '#4db6ac', '#4e342e', '#e0f2f7'); // 農場小屋
-            drawText('胖波農場', farmX + farmW / 2, farmY + farmH * 0.5, '#424242', '20px 微軟正黑體', true);
-            locations.push({ name: '胖波農場', x: farmX, y: farmY, width: farmW, height: farmH });
-
-            // 森林入口 (多棵樹，層次感)
+            // 森林入口 (多棵樹，層次感，不同種類)
             const forestX = BASE_MAP_WIDTH * 0.02;
             const forestY = BASE_MAP_HEIGHT * 0.05;
             const forestW = 200;
             const forestH = 200;
-            drawTree(forestX + 50, forestY + 80, 70, '#795548', '#4caf50');
-            drawTree(forestX + 120, forestY + 50, 80, '#795548', '#388e3c');
-            drawTree(forestX + 180, forestY + 70, 65, '#795548', '#66bb6a');
+            drawTree(forestX + 50, forestY + 80, 'round', 1.2);
+            drawTree(forestX + 120, forestY + 50, 'pine', 1.5);
+            drawTree(forestX + 180, forestY + 70, 'bush', 1.0);
+            drawTree(forestX + 90, forestY + 130, 'round', 0.9);
             locations.push({ name: '南瓜森林入口', x: forestX, y: forestY, width: forestW, height: forestH });
 
             // 中央廣場標示
             drawCircle(BASE_MAP_WIDTH * 0.4, BASE_MAP_HEIGHT * 0.5, 25, '#ffeb3b', '#fbc02d', 4);
             drawText('廣場', BASE_MAP_WIDTH * 0.4, BASE_MAP_HEIGHT * 0.5, '#333', '22px 微軟正黑體', true);
 
-            // 3. 前景層 (Hover Highlights, Particles)
+
+            // 3. 前景層 (Hover Highlights, Particles, Villagers)
             // 繪製懸停效果
             if (hoverLocation) {
                 ctx.strokeStyle = '#ffeb3b'; // 黃色邊框
@@ -565,6 +688,12 @@
                 ctx.strokeRect(hoverLocation.x * scaleFactor, hoverLocation.y * scaleFactor, hoverLocation.width * scaleFactor, hoverLocation.height * scaleFactor);
                 ctx.shadowBlur = 0; // 重置陰影
             }
+
+            // 繪製村民
+            drawVillager(BASE_MAP_WIDTH * 0.45, BASE_MAP_HEIGHT * 0.55, 1, 'boy', animationTime); // 廣場附近
+            drawVillager(BASE_MAP_WIDTH * 0.18, BASE_MAP_HEIGHT * 0.3, 0.9, 'girl', animationTime + 10); // 雜貨店附近
+            drawVillager(BASE_MAP_WIDTH * 0.8, BASE_MAP_HEIGHT * 0.75, 1.1, 'boy', animationTime + 20); // 農場附近
+            drawVillager(BASE_MAP_WIDTH * 0.5, BASE_MAP_HEIGHT * 0.1, 1, 'girl', animationTime + 30); // 市政廳附近
         }
 
         // --- Canvas 事件處理 ---
@@ -607,6 +736,7 @@
                 } else {
                     canvas.style.cursor = 'default'; // 恢復默認鼠標
                 }
+                // 不需要每次移動都重繪，只在hover狀態改變時重繪一次
                 drawVillageMapCanvas(); // 重新繪製以更新懸停效果
             }
         }
@@ -618,6 +748,7 @@
         function animate(currentTime) {
             const deltaTime = currentTime - lastFrameTime;
             lastFrameTime = currentTime;
+            animationTime += deltaTime / 1000 * 60; // 模擬幀數計時，用於動畫相位
 
             // 更新螢火蟲位置
             fireflies.forEach(f => f.update());
@@ -770,11 +901,13 @@
                     break;
                 case '村長市政廳':
                     addMessage('村長正在市政廳的辦公室裡處理公務，他似乎看到你進來了。', 'dialog');
-                    // TODO: 任務介面
                     break;
                 case '胖波農場':
                     addMessage('胖波正在農場裡辛勤地澆灌蘿蔔，空氣中瀰漫著泥土的清香。', 'dialog');
                     // TODO: 農場互動或小遊戲
+                    break;
+                case '村莊池塘':
+                    addMessage('池塘裡波光粼粼，幾隻小魚在水中嬉戲，令人心曠神怡。', 'dialog');
                     break;
                 case '廣場':
                     addMessage('村莊廣場上陽光普照，孩子們正在嬉戲，你感到一陣輕鬆。', 'dialog');
