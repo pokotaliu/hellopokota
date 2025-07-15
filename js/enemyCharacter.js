@@ -57,11 +57,11 @@ export class EnemyCharacter extends Character {
     updateAI(player, attackPlayerFn, currentTime) {
         if (player.hp <= 0 || this.hp <= 0) return; // 如果玩家或僵屍死了，停止 AI
 
-        // 僵屍的中心點
+        // 僵屍的中心點 (用於計算距離)
         const currentZombieCenterX = this.pxX + this.tileSize / 2;
         const currentZombieCenterY = this.pxY + this.tileSize / 2;
 
-        // 胖波的中心點
+        // 胖波的中心點 (用於計算距離)
         const targetPlayerCenterX = player.pxX + player.tileSize / 2;
         const targetPlayerCenterY = player.pxY + player.tileSize / 2;
 
@@ -87,8 +87,8 @@ export class EnemyCharacter extends Character {
             }
         }
 
-        // 更新磁磚座標 (僅供邏輯判斷和 isWalkable 函數使用)
-        // 這裡需要根據像素座標來更新磁磚座標，以便於 Map.isWalkable 判斷
+        // 更新磁磚座標 (僅供邏輯判斷，例如 isWalkable 不適用於僵屍的像素移動)
+        // 僵屍的 x, y 磁磚座標應該基於其像素座標的四捨五入
         this.x = Math.floor(this.pxX / this.tileSize);
         this.y = Math.floor(this.pxY / this.tileSize);
 
