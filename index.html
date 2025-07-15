@@ -2,7 +2,8 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <!-- 關鍵修改：加入 user-scalable=no 以禁用使用者縮放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
     <title>胖波的可愛村莊</title>
     <style>
         /* CSS 變數：讓顏色管理更方便 */
@@ -62,6 +63,8 @@
             padding: 20px;
             overflow: hidden;
             transition: background 1s ease-in-out; /* 背景切換動畫 */
+            /* 禁用 iOS 上的雙擊縮放 */
+            touch-action: manipulation;
         }
 
         h1 {
@@ -202,6 +205,34 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
     </style>
+    <script>
+        // 禁用雙擊縮放和兩指縮放
+        document.addEventListener('touchstart', function(event) {
+            // 阻止兩指縮放 (pinch zoom)
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false }); // { passive: false } 允許阻止預設行為
+
+        document.addEventListener('touchmove', function(event) {
+            // 阻止兩指縮放 (pinch zoom)
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // 阻止雙擊縮放 (針對桌面瀏覽器或部分行動瀏覽器)
+        document.addEventListener('dblclick', function(event) {
+            event.preventDefault();
+        }, { passive: false });
+
+        // 針對 IE/Edge 的觸控行為
+        document.addEventListener('pointerdown', function(event) {
+            if (event.pointerType === 'touch' && event.touches && event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+    </script>
 </head>
 <body>
     <h1>胖波的可愛村莊</h1>
