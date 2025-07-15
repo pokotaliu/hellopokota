@@ -30,7 +30,9 @@ export class Character {
     updateAnimation() {
         if (this.isMoving) {
             this.animationTimer++;
-            if (this.animationTimer >= GAME_CONSTANTS.POKOTA_ANIM_FRAME_DURATION) {
+            // 使用更通用的動畫幀持續時間，而不是寫死的 POKOTA_ANIM_FRAME_DURATION
+            // 每個角色可以有自己的動畫速度
+            if (this.animationTimer >= GAME_CONSTANTS.POKOTA_ANIM_FRAME_DURATION) { // 可以考慮讓 Character 有自己的 animFrameDuration 屬性
                 this.animationFrame = 1 - this.animationFrame;
                 this.animationTimer = 0;
             }
@@ -101,6 +103,9 @@ export class Character {
                 break;
         }
 
+        // 檢查新的目標位置是否在邊界內
+        // 這裡假設 isWalkableFn 也會檢查邊界，但為了更健壯，可以在這裡預先檢查
+        // 通常 isWalkableFn 會包含這個邏輯
         if (isWalkableFn(newTargetX, newTargetY)) {
             this.targetX = newTargetX;
             this.targetY = newTargetY;
