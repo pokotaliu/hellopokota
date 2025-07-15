@@ -430,4 +430,65 @@ export class Renderer {
         this.ctx.fill();
         this.ctx.restore();
     }
+
+    /**
+     * 遊戲渲染
+     * @param {Map} currentMap - 當前地圖物件
+     * @param {PlayerCharacter} player - 玩家角色
+     * @param {Array<EnemyCharacter>} enemies - 敵人陣列
+     * @param {Array<Projectile>} projectiles - 投射物陣列
+     */
+    render(currentMap, player, enemies, projectiles) {
+        // 清空畫布
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // 計算鏡頭偏移量，使玩家居中
+        const offsetX = player.pxX - this.canvas.width / 2 + this.tileSize / 2;
+        const offsetY = player.pxY - this.canvas.height / 2 + this.tileSize / 2;
+
+        // 繪製地圖磁磚
+        for (let r = 0; r < currentMap.rows; r++) {
+            for (let c = 0; c < currentMap.cols; c++) {
+                const tile = currentMap.getTile(c, r);
+                if (!tile) continue;
+
+                switch (tile.type) {
+                    case 0: // 草地
+                        this._drawGrass(c, r, offsetX, offsetY, tile.grassShadeIndex, currentMap.colors);
+                        break;
+                    case 1: // 小屋
+                        this._drawHouse(c, r, offsetX, offsetY);
+                        break;
+                    case 2: // 樹木
+                        this._drawTree(c, r, offsetX, offsetY);
+                        break;
+                    case 3: // 蘿蔔
+                        this._drawCarrot(c, r, offsetX, offsetY);
+                        break;
+                    case 4: // 岩石 (怪物地圖)
+                        this._drawRock(c, r, offsetX, offsetY);
+                        break;
+                    case 5: // 骷髏 (怪物地圖)
+                        this._drawSkull(c, r, offsetX, offsetY);
+                        break;
+                    case 6: // 傳送門
+                        this._drawPortal(c, r, offsetX, offsetY);
+                        break;
+                }
+            }
+        }
+
+        // 繪製投射物
+        projectiles.forEach(p => {
+            this._drawProjectile(p, offsetX, offsetY);
+        });
+
+        // 繪製敵人
+        enemies.forEach(enemy => {
+            enemy.draw(this.ctx, offsetX, offsetY, this.colors);
+        });
+
+        // 繪製玩家
+        this._drawPokota(player, offsetX, offsetY, this.colors);
+    }
 }
