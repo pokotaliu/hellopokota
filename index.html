@@ -1,40 +1,112 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的網頁冒險遊戲</title>
-    <link rel="stylesheet" href="css/style.css">
-    </head>
+  <meta charset="UTF-8">
+  <title>波兔村聊天室</title>
+  <style>
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #chatbox {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .message {
+      background: #e0f7fa;
+      margin: 6px 0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 80%;
+    }
+
+    .system {
+      background: #fce4ec;
+      color: #880e4f;
+      font-style: italic;
+    }
+
+    #controls {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background: #fafafa;
+      border-top: 1px solid #ccc;
+    }
+
+    #controls button {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background: #64b5f6;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #controls button:hover {
+      background: #42a5f5;
+    }
+  </style>
+</head>
 <body>
-    <div id="game-wrapper">
-        <header id="game-header">
-            <h1>我的冒險遊戲</h1>
-            </header>
 
-        <main id="game-container">
-            <div id="main-screen">
-                <h2>載入中...</h2>
-                <p>請稍候，遊戲內容即將呈現。</p>
-            </div>
-            <div id="message-box">
-                <div class="message system">系統: 遊戲啟動中...</div>
-            </div>
-        </main>
+<div id="chatbox">
+  <div class="message system">🎉 歡迎來到波兔村聊天室！</div>
+</div>
 
-        <footer id="game-controls">
-            <button class="game-button" id="btn-explore">探索</button>
-            <button class="game-button" id="btn-inventory">物品</button>
-            <button class="game-button" id="btn-skills">技能</button>
-            <button class="game-button" id="btn-status">狀態</button>
-            <button class="game-button" id="btn-save">儲存</button>
-            </footer>
-    </div>
+<div id="controls">
+  <button onclick="sendMessage()">發送訊息</button>
+  <button onclick="randomMessage()">隨機訊息</button>
+  <button onclick="clearMessages()">清空訊息</button>
+</div>
 
-    <script src="js/gameEvents.js"></script>
-    <script src="js/messageHandler.js"></script>
-    <script src="js/screenRenderer.js"></script>
-    <script src="js/gameLogic.js"></script>
-    <script src="js/init.js"></script>
+<script>
+  const chatbox = document.getElementById("chatbox");
+
+  function sendMessage() {
+    const msg = prompt("輸入訊息：");
+    if (msg) {
+      appendMessage("你說：「" + msg + "」");
+    }
+  }
+
+  function randomMessage() {
+    const messages = [
+      "胖波說：「蘿蔔最好吃！」",
+      "熊大：「我是國王，你們都要聽我的！」",
+      "白爛貓：「宇宙其實不在意你吃了幾根蘿蔔。」",
+      "瘦波靜靜地看著你，一言不發。",
+      "系統提示：你獲得了一根神聖的金蘿蔔。"
+    ];
+    const random = messages[Math.floor(Math.random() * messages.length)];
+    appendMessage(random);
+  }
+
+  function clearMessages() {
+    chatbox.innerHTML = '<div class="message system">🧹 已清空所有訊息。</div>';
+  }
+
+  function appendMessage(text) {
+    const div = document.createElement("div");
+    div.className = "message";
+    div.textContent = text;
+    chatbox.appendChild(div);
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
+</script>
+
 </body>
 </html>
