@@ -1,92 +1,64 @@
-// js/constants.js
+// js/character.js
 /**
- * @file 遊戲常數配置
+ * @file 遊戲中所有人物的基底類別
  */
 
-export const GAME_CONSTANTS = {
-    TILE_SIZE: 32,
-    CANVAS_WIDTH_TILES: 10,
-    CANVAS_HEIGHT_TILES: 10,
-    POKOTA_MOVE_SPEED_PX: 4,
-    POKOTA_ANIM_FRAME_DURATION: 8,
-    ZOMBIE_ATTACK_RANGE_TILES: 5,
-    PROJECTILE_SPEED: 5,
-    ATTACK_INTERVAL: 1000,
-    POKOTA_MAX_HP: 100,
-    ZOMBIE_MELEE_DAMAGE: 5,
-    ZOMBIE_ATTACK_COOLDOWN: 500,
-    POKOTA_SAFE_DISTANCE_TILES: 3, // 胖波與怪物保持的安全距離 (磁磚數)
-    ZOMBIE_ATTACK_RANGE_PX: 1.5 * 32 // 僵屍的攻擊範圍 (像素)
-};
+import { GAME_CONSTANTS } from './constants.js';
 
-export const gameMapsData = {
-    'village': {
-        initialPokotaX: 9,
-        initialPokotaY: 9,
-        mapGrid: [
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6], /* 6 是傳送門 */
-            [0, 1, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0], /* 4 是僵屍生成點，但視覺上是草地 */
-            [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        ],
-        portal: { x: 19, y: 0, targetMap: 'monster_zone', targetX: 0, targetY: 9 },
-        colors: {
-            skyStart: '#a7d9f7', skyEnd: '#d1edff', ground: '#fce8f0',
-            grassBase: '#ccf5d4', grassDetail: '#a4e6b1'
-        },
-        spawnPoints: [ {x: 9, y: 9}, {x: 1, y: 1}, {x: 18, y: 18} ] // 村莊地圖的僵屍生成點
-    },
-    'monster_zone': {
-        initialPokotaX: 0,
-        initialPokotaY: 9,
-        mapGrid: [
-            [6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], /* 6 是傳送門 */
-            [0, 4, 0, 5, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], /* 4: 岩石, 5: 骷髏 */
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 5, 0, 0, 0, 0, 0, 0],
-            [0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 4, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 4, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 4, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        ],
-        portal: { x: 0, y: 0, targetMap: 'village', targetX: 19, targetY: 0 },
-        colors: {
-            skyStart: '#556070', skyEnd: '#708090', ground: '#403030',
-            grassBase: '#4a5a4a', grassDetail: '#304030'
-        },
-        initialMonsters: [
-            { x: 5, y: 5, hp: 100, speed: 0.5 }, // 增加僵屍速度
-            { x: 7, y: 10, hp: 100, speed: 0.5 },
-            { x: 12, y: 3, hp: 100, speed: 0.5 },
-            { x: 15, y: 15, hp: 100, speed: 0.5 }
-        ]
+export class Character {
+    constructor(x, y, hp, speed, tileSize) {
+        this.x = x; // 磁磚X座標
+        this.y = y; // 磁磚Y座標
+        this.pxX = x * tileSize; // 像素X座標
+        this.pxY = y * tileSize; // 像素Y座標
+        this.targetX = x; // 目標磁磚X座標
+        this.targetY = y; // 目標磁磚Y座標
+        this.hp = hp;
+        this.maxHp = hp;
+        this.speedPx = speed; // 像素移動速度
+        this.isMoving = false;
+        this.animationFrame = 0;
+        this.animationTimer = 0;
+        this.tileSize = tileSize; // 方便子類別繪製
+
+        this.lastAttackTime = 0; // 上次攻擊時間
     }
-};
+
+    /**
+     * 更新人物動畫狀態
+     */
+    updateAnimation() {
+        if (this.isMoving) {
+            this.animationTimer++;
+            if (this.animationTimer >= GAME_CONSTANTS.POKOTA_ANIM_FRAME_DURATION) {
+                this.animationFrame = 1 - this.animationFrame;
+                this.animationTimer = 0;
+            }
+        } else {
+            this.animationFrame = 0;
+            this.animationTimer = 0;
+        }
+    }
+
+    /**
+     * 抽象方法：繪製人物 (由子類別實現)
+     * @param {CanvasRenderingContext2D} ctx - Canvas 2D 渲染上下文
+     * @param {number} offsetX - 鏡頭X偏移量
+     * @param {number} offsetY - 鏡頭Y偏移量
+     * @param {object} colors - 遊戲顏色配置
+     */
+    draw(ctx, offsetX, offsetY, colors) {
+        throw new Error("draw() method must be implemented by subclass");
+    }
+
+    /**
+     * 人物受到傷害
+     * @param {number} amount - 傷害量
+     */
+    takeDamage(amount) {
+        this.hp -= amount;
+        if (this.hp < 0) {
+            this.hp = 0;
+        }
+    }
+}
