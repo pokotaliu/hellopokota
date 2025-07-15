@@ -43,6 +43,14 @@
             --spawn-button-color: #4CAF50;
             --spawn-button-hover-color: #45a049;
             --spawn-button-active-color: #367c39;
+
+            /* 新增熊大的顏色變數 */
+            --brown-bear-body: #8B4513;
+            --brown-bear-snout: #D2B48C;
+            --brown-bear-nose: #333333;
+            --brown-bear-eye: #000000;
+            --brown-bear-inner-ear: #A0522D;
+            --brown-bear-club: #5A2D0C;
         }
 
         * {
@@ -91,7 +99,8 @@
                 ". up ."
                 "left . right"
                 ". down ."
-                "spawn spawn spawn";
+                "spawn spawn spawn"
+                "switch switch switch"; /* 新增切換按鈕的網格區域 */
             gap: 10px;
             max-width: 250px;
         }
@@ -126,6 +135,22 @@
         #spawnZombieBtn:active {
             background-color: var(--spawn-button-active-color);
         }
+
+        /* 新增切換角色按鈕樣式 */
+        #switchCharacterBtn {
+            grid-area: switch;
+            width: auto;
+            padding: 15px 30px;
+            background-color: #6a5acd; /* 藍紫色 */
+            font-size: 22px;
+        }
+        #switchCharacterBtn:hover {
+            background-color: #5a4acb;
+        }
+        #switchCharacterBtn:active {
+            background-color: #4a3aac;
+        }
+
 
         .btn-panel button:hover {
             background-color: var(--button-hover-color);
@@ -243,6 +268,7 @@
         <button id="moveRightBtn">➡</button>
         <button id="moveDownBtn">⬇</button>
         <button id="spawnZombieBtn">生成僵屍</button>
+        <button id="switchCharacterBtn">切換角色</button> <!-- 新增切換角色按鈕 -->
     </div>
 
     <div id="gameInfo">
