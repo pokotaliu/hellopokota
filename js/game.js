@@ -101,12 +101,12 @@ class Game {
             skullColor: getComputedStyle(document.documentElement).getPropertyValue('--skull-color'),
             portalColor: getComputedStyle(document.documentElement).getPropertyValue('--portal-color'),
             // 新增熊大的顏色
-            brownBearBody: '#8B4513', // 棕色
-            brownBearSnout: '#D2B48C', // 米色
-            brownBearNose: '#333333', // 深色鼻子
-            brownBearEye: '#000000', // 黑色眼睛
-            brownBearInnerEar: '#A0522D', // 稍淺的棕色內耳
-            brownBearClub: '#5A2D0C' // 棍棒顏色
+            brownBearBody: getComputedStyle(document.documentElement).getPropertyValue('--brown-bear-body'),
+            brownBearSnout: getComputedStyle(document.documentElement).getPropertyValue('--brown-bear-snout'),
+            brownBearNose: getComputedStyle(document.documentElement).getPropertyValue('--brown-bear-nose'),
+            brownBearEye: getComputedStyle(document.documentElement).getPropertyValue('--brown-bear-eye'),
+            brownBearInnerEar: getComputedStyle(document.documentElement).getPropertyValue('--brown-bear-inner-ear'),
+            brownBearClub: getComputedStyle(document.documentElement).getPropertyValue('--brown-bear-club')
         };
         this._updateGrassShades(this.mapsData[this.currentMapId].colors.grassBase);
     }
@@ -187,8 +187,9 @@ class Game {
             });
             this._toggleManualControls(false); // 自動戰鬥模式下禁用手動控制
         } else {
-            this.pokota.isAutoCombatMode = false; // 胖波禁用自動戰鬥
-            this.brownBear.isAutoCombatMode = false; // 熊大禁用自動戰鬥
+            // 離開怪物區域，關閉所有玩家的自動戰鬥模式
+            this.pokota.isAutoCombatMode = false;
+            this.brownBear.isAutoCombatMode = false;
             this._toggleManualControls(true); // 手動模式下啟用手動控制
         }
         console.log(`載入地圖: ${mapId}`);
@@ -245,11 +246,13 @@ class Game {
 
         const spawnPoint = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
 
+        // 確保生成點與活躍角色距離至少三格以上
         const dist = Math.sqrt(
             Math.pow(spawnPoint.x - this.activePlayer.x, 2) +
             Math.pow(spawnPoint.y - this.activePlayer.y, 2)
         );
-        if (dist < 3) { // 確保距離活躍角色至少三格以上
+        if (dist < 3) {
+            console.log("DEBUG: 僵屍生成點太近，取消生成。");
             return;
         }
 
@@ -261,7 +264,7 @@ class Game {
      * 切換當前活躍的角色
      */
     switchCharacter() {
-        // 記錄當前活躍角色的位置和血量
+        // 記錄當前活躍角色的位置、血量和自動戰鬥模式狀態
         const currentX = this.activePlayer.x;
         const currentY = this.activePlayer.y;
         const currentPxX = this.activePlayer.pxX;
@@ -273,17 +276,19 @@ class Game {
 
         if (this.activePlayer === this.pokota) {
             this.activePlayer = this.brownBear;
-            this.pokota.hp = currentHP; // 保存胖波的血量
-            this.pokota.isAutoCombatMode = currentIsAutoCombatMode; // 保存胖波的自動戰鬥模式
+            // 保存胖波的狀態
+            this.pokota.hp = currentHP;
+            this.pokota.isAutoCombatMode = currentIsAutoCombatMode;
             console.log("切換到熊大！");
         } else {
             this.activePlayer = this.pokota;
-            this.brownBear.hp = currentHP; // 保存熊大的血量
-            this.brownBear.isAutoCombatMode = currentIsAutoCombatMode; // 保存熊大的自動戰鬥模式
+            // 保存熊大的狀態
+            this.brownBear.hp = currentHP;
+            this.brownBear.isAutoCombatMode = currentIsAutoCombatMode;
             console.log("切換到胖波！");
         }
 
-        // 將新活躍角色的位置設定為前一個角色的位置
+        // 將新活躍角色的位置、血量和自動戰鬥模式設定為前一個角色的狀態
         this.activePlayer.x = currentX;
         this.activePlayer.y = currentY;
         this.activePlayer.pxX = currentPxX;
@@ -297,9 +302,9 @@ class Game {
         // 如果在怪物區域，強制啟用自動戰鬥
         if (this.currentMapId === 'monster_zone') {
             this.activePlayer.isAutoCombatMode = true;
-            this._toggleManualControls(false);
+            this._toggleManualControls(false); // 禁用手動控制
         } else {
-            this._toggleManualControls(true);
+            this._toggleManualControls(true); // 啟用手動控制
         }
 
         // DEBUG: 檢查切換後 activePlayer 的狀態
@@ -367,7 +372,7 @@ class Game {
             }
         }
 
-        // 檢查自動戰鬥模式是否剛剛被角色本身關閉
+        // 檢查自動戰鬥模式是否剛剛被角色本身關閉 (例如：熊大在沒有敵人時會關閉自動戰鬥)
         if (wasAutoCombatMode && !this.activePlayer.isAutoCombatMode) {
             // 只有當前地圖不是怪物區域時才重新啟用手動控制
             if (this.currentMapId !== 'monster_zone') {
@@ -547,11 +552,10 @@ class Game {
 
         // 重新開始按鈕
         this.restartButton.addEventListener('click', () => {
-            this.activePlayer.hp = this.constants.POKOTA_MAX_HP; // 重置為胖波的滿血，因為胖波是預設角色
+            // 重置兩個角色的血量和自動戰鬥模式
             this.pokota.hp = this.constants.POKOTA_MAX_HP;
+            this.pokota.isAutoCombatMode = false;
             this.brownBear.hp = this.constants.BROWN_BEAR_MAX_HP;
-
-            this.pokota.isAutoCombatMode = false; // 重置自動戰鬥模式
             this.brownBear.isAutoCombatMode = false;
 
             this.gameOverOverlay.style.display = 'none';
@@ -559,9 +563,11 @@ class Game {
             this.activePlayer = this.pokota; // 確保重置後是胖波
 
             // 重新啟動遊戲循環 (如果已經停止)
-            if (this.activePlayer.hp > 0 && this.gameOverOverlay.style.display === 'none') {
-                 requestAnimationFrame(this.gameLoop.bind(this));
-            }
+            // 判斷是否需要重新 requestAnimationFrame
+            // 通常在 gameLoop 內部會持續調用 requestAnimationFrame，所以這裡不需要再次調用
+            // 除非你在遊戲結束時明確取消了 requestAnimationFrame
+            // 目前的邏輯是只要 HP > 0，gameLoop 就會繼續運行
+            console.log("DEBUG: Game restarted. Active player set to Pokota.");
         });
     }
 }
