@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>波兔村冒險：我的能力展示 (ASCII 地圖)</title>
+    <title>波兔村莊：Canvas 繪圖版</title>
     <style>
         /* 整體佈局 */
         body {
@@ -47,32 +47,32 @@
             overflow: hidden; /* 防止內部元素溢出 */
         }
 
-        /* 主畫面 */
+        /* 主畫面 - Canvas 模式下不居中內容，讓 Canvas 填滿 */
         #main-screen {
-            flex: 3; /* 主畫面佔大部分空間 */
+            flex: 3;
             background-color: #ffffff;
             border: 1px solid #b2ebf2;
             border-radius: 8px;
-            padding: 15px;
-            overflow: auto; /* 內容超出時可滾動 */
-            display: flex; /* 讓內部內容可以彈性佈局 */
-            justify-content: center; /* 內容水平置中 */
-            align-items: center; /* 內容垂直置中 */
-            font-size: 24px;
-            color: #555;
-            flex-direction: column; /* 允許垂直排列內容 */
+            overflow: hidden; /* 確保 Canvas 不會溢出 */
+            position: relative; /* 為了 Canvas 定位 */
+        }
+
+        /* Canvas 元素本身 */
+        #game-canvas {
+            display: block; /* 消除底部多餘空間 */
+            background-color: #81c784; /* 草地綠 */
         }
 
         /* 訊息框 */
         #message-box {
-            flex: 1; /* 訊息框佔剩餘空間 */
+            flex: 1;
             background-color: #e0f7fa;
             border: 1px solid #b2ebf2;
             border-radius: 8px;
             padding: 10px;
             display: flex;
             flex-direction: column;
-            overflow-y: auto; /* 訊息過多時可滾動 */
+            overflow-y: auto;
             font-size: 0.9em;
         }
         .message {
@@ -80,7 +80,7 @@
             padding: 8px;
             margin-bottom: 5px;
             border-radius: 5px;
-            word-wrap: break-word; /* 自動換行 */
+            word-wrap: break-word;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .message.system {
@@ -106,18 +106,18 @@
             gap: 10px;
             background-color: #fafafa;
             border-top: 1px solid #b2ebf2;
-            flex-wrap: wrap; /* 按鈕換行 */
+            flex-wrap: wrap;
         }
         .game-button {
             padding: 12px 20px;
             font-size: 16px;
             cursor: pointer;
-            background-color: #00bcd4; /* 青色按鈕 */
+            background-color: #00bcd4;
             color: white;
             border: none;
             border-radius: 5px;
             transition: background-color 0.3s ease, transform 0.1s ease;
-            min-width: 120px; /* 最小寬度 */
+            min-width: 120px;
         }
         .game-button:hover {
             background-color: #00acc1;
@@ -127,69 +127,13 @@
             transform: translateY(0);
         }
 
-        /* ASCII 地圖特定樣式 */
-        #ascii-map-container {
-            position: relative; /* 讓內部地點可以絕對定位 */
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace; /* 等寬字體確保ASCII排版 */
-            white-space: pre; /* 保留所有空白和換行 */
-            background-color: #f0f4c3; /* 淺黃綠色背景 */
-            color: #424242; /* 深灰色文字 */
-            padding: 20px;
-            border-radius: 8px;
-            line-height: 1.2; /* 調整行高 */
-            font-size: 16px; /* 調整字體大小 */
-            width: 95%; /* 佔據容器大部分寬度 */
-            height: 95%; /* 佔據容器大部分高度 */
-            overflow: auto; /* 如果地圖太大可以滾動 */
-        }
-
-        /* 確保地圖內容顯示在容器中間 */
-        #main-screen.ascii-map-mode {
-            justify-content: flex-start; /* 讓內容靠上對齊，因為ASCII地圖通常是從左上角開始 */
-            align-items: flex-start;
-        }
-
-
-        .map-location {
-            position: absolute;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid transparent; /* 預設透明邊框 */
-            transition: border-color 0.2s ease, background-color 0.2s ease;
-            z-index: 10; /* 確保熱區在ASCII文字之上 */
-        }
-        .map-location:hover {
-            border-color: #ffeb3b; /* 滑鼠懸停時顯示黃色邊框 */
-            background-color: rgba(255, 255, 0, 0.1); /* 輕微背景色提示 */
-        }
-        .location-name {
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            white-space: nowrap;
-            opacity: 0; /* 預設隱藏名稱 */
-            pointer-events: none; /* 讓名稱不會阻擋點擊事件 */
-            transition: opacity 0.2s ease;
-            position: absolute; /* 絕對定位在熱區內 */
-            bottom: 105%; /* 顯示在熱區上方 */
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 20; /* 確保名稱在熱區之上 */
-        }
-        .map-location:hover .location-name {
-            opacity: 1; /* 滑鼠懸停時顯示名稱 */
-        }
-
         /* 通用畫面樣式 */
         .generic-screen {
             text-align: center;
             padding: 20px;
             color: #333;
             max-width: 80%;
+            margin: auto; /* 讓內容在主畫面中居中 */
         }
         .generic-screen h3 {
             font-size: 1.8em;
@@ -204,11 +148,11 @@
         /* 響應式設計 */
         @media (max-width: 768px) {
             #game-container {
-                flex-direction: column; /* 在小螢幕上垂直堆疊 */
+                flex-direction: column;
             }
             #main-screen, #message-box {
-                flex: none; /* 取消flex佔比 */
-                height: 50vh; /* 設置固定高度 */
+                flex: none;
+                height: 50vh;
             }
             #main-screen {
                 min-height: 300px;
@@ -230,14 +174,12 @@
 
     <div id="game-wrapper">
         <header id="game-header">
-            波兔村冒險
+            波兔村莊大冒險
         </header>
 
         <main id="game-container">
             <div id="main-screen">
-                <h2>遊戲載入中...</h2>
-                <p>請稍候，波兔村的冒險即將開始！</p>
-            </div>
+                </div>
             <div id="message-box">
                 <div class="message system">系統: 遊戲啟動中...</div>
             </div>
@@ -285,117 +227,280 @@
 
         // screenRenderer.js 內容 (已整合到此檔案中)
         const mainScreen = document.getElementById('main-screen');
+        let canvas = null;
+        let ctx = null;
+        let locations = []; // 儲存地圖上可點擊區域的資訊
 
+        // --- 地圖繪圖相關函數 ---
+        const mapWidth = 800; // 地圖寬度
+        const mapHeight = 600; // 地圖高度
+
+        function drawRect(x, y, width, height, color, strokeColor = null, lineWidth = 0) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, width, height);
+            if (strokeColor) {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth;
+                ctx.strokeRect(x, y, width, height);
+            }
+        }
+
+        function drawCircle(x, y, radius, color, strokeColor = null, lineWidth = 0) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            if (strokeColor) {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth;
+                ctx.stroke();
+            }
+        }
+
+        function drawText(text, x, y, color, font = '16px 微軟正黑體') {
+            ctx.fillStyle = color;
+            ctx.font = font;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x, y);
+        }
+
+        function drawHouse(x, y, width, height, bodyColor, roofColor) {
+            // Body
+            drawRect(x, y + height * 0.3, width, height * 0.7, bodyColor);
+            // Roof
+            ctx.fillStyle = roofColor;
+            ctx.beginPath();
+            ctx.moveTo(x - 5, y + height * 0.3); // 左上角稍微超出
+            ctx.lineTo(x + width / 2, y);      // 屋頂尖端
+            ctx.lineTo(x + width + 5, y + height * 0.3); // 右上角稍微超出
+            ctx.closePath();
+            ctx.fill();
+            // Door
+            drawRect(x + width * 0.4, y + height * 0.6, width * 0.2, height * 0.4, '#6d4c41');
+        }
+
+        function drawShop(x, y, width, height) {
+            drawRect(x, y + height * 0.2, width, height * 0.8, '#ffcc80', '#e65100', 2); // Body
+            drawRect(x + width * 0.1, y + height * 0.3, width * 0.8, height * 0.5, '#bbdefb'); // Window
+            drawText('商店', x + width / 2, y + height * 0.6, '#333');
+            ctx.fillStyle = '#ff8a65'; // Roof
+            ctx.beginPath();
+            ctx.moveTo(x, y + height * 0.2);
+            ctx.lineTo(x + width / 2, y);
+            ctx.lineTo(x + width, y + height * 0.2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawBlacksmith(x, y, width, height) {
+            drawRect(x, y + height * 0.2, width, height * 0.8, '#bdbdbd', '#424242', 2); // Body
+            drawRect(x + width * 0.2, y + height * 0.5, width * 0.6, height * 0.3, '#795548'); // Door
+            drawText('鐵匠鋪', x + width / 2, y + height * 0.6, '#333');
+            ctx.fillStyle = '#616161'; // Roof
+            ctx.beginPath();
+            ctx.moveTo(x, y + height * 0.2);
+            ctx.lineTo(x + width / 2, y);
+            ctx.lineTo(x + width, y + height * 0.2);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawTownHall(x, y, width, height) {
+            drawRect(x, y, width, height, '#b3e5fc', '#0288d1', 2); // Body
+            drawRect(x + width * 0.2, y + height * 0.7, width * 0.6, height * 0.3, '#795548'); // Door
+            drawText('市政廳', x + width / 2, y + height * 0.4, '#333', '20px 微軟正黑體');
+            drawCircle(x + width / 2, y + height * 0.2, width * 0.1, '#fff', '#0288d1', 2); // Clock
+        }
+
+        function drawTree(x, y, size) {
+            // Trunk
+            drawRect(x - size * 0.1, y + size * 0.3, size * 0.2, size * 0.7, '#8d6e63');
+            // Leaves
+            drawCircle(x, y + size * 0.2, size * 0.3, '#4caf50');
+            drawCircle(x - size * 0.15, y + size * 0.3, size * 0.25, '#66bb6a');
+            drawCircle(x + size * 0.15, y + size * 0.3, size * 0.25, '#66bb6a');
+        }
+
+        function drawRiver(ctx, points, color, width) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+        }
+
+        // --- 繪製完整的波兔村地圖 ---
+        function drawVillageMapCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+            locations = []; // 清空之前的熱區
+
+            // 背景草地 (Canvas 預設背景色已設定，這裡可以不畫)
+            // drawRect(0, 0, canvas.width, canvas.height, '#81c784');
+
+            // 道路
+            ctx.fillStyle = '#a1887f'; // 棕色道路
+            ctx.fillRect(0, canvas.height * 0.5 - 20, canvas.width, 40); // 橫向主路
+            ctx.fillRect(canvas.width * 0.4 - 20, 0, 40, canvas.height); // 縱向主路
+
+            // 河流
+            const riverPoints = [
+                { x: 0, y: canvas.height * 0.7 },
+                { x: canvas.width * 0.3, y: canvas.height * 0.8 },
+                { x: canvas.width * 0.6, y: canvas.height * 0.7 },
+                { x: canvas.width, y: canvas.height * 0.75 }
+            ];
+            drawRiver(ctx, riverPoints, '#4fc3f7', 30); // 藍色河流
+
+            // 建築物和地點
+            // 商店
+            const shopX = mapWidth * 0.1;
+            const shopY = mapHeight * 0.4;
+            const shopW = 100;
+            const shopH = 120;
+            drawShop(shopX, shopY, shopW, shopH);
+            locations.push({ name: '波兔雜貨店', x: shopX, y: shopY, width: shopW, height: shopH });
+
+            // 鐵匠鋪
+            const blacksmithX = mapWidth * 0.7;
+            const blacksmithY = mapHeight * 0.35;
+            const blacksmithW = 110;
+            const blacksmithH = 130;
+            drawBlacksmith(blacksmithX, blacksmithY, blacksmithW, blacksmithH);
+            locations.push({ name: '熊大鐵匠鋪', x: blacksmithX, y: blacksmithY, width: blacksmithW, height: blacksmithH });
+
+            // 市政廳
+            const townHallX = mapWidth * 0.4;
+            const townHallY = mapHeight * 0.1;
+            const townHallW = 150;
+            const townHallH = 180;
+            drawTownHall(townHallX, townHallY, townHallW, townHallH);
+            locations.push({ name: '村長市政廳', x: townHallX, y: townHallY, width: townHallW, height: townHallH });
+
+            // 我的小屋
+            const homeX = mapWidth * 0.25;
+            const homeY = mapHeight * 0.75;
+            const homeW = 90;
+            const homeH = 100;
+            drawHouse(homeX, homeY, homeW, homeH, '#f8bbd0', '#e57373'); // 粉紅小屋，紅色屋頂
+            locations.push({ name: '我的小屋', x: homeX, y: homeY, width: homeW, height: homeH });
+
+            // 森林入口 (多棵樹)
+            const forestX = mapWidth * 0.05;
+            const forestY = mapHeight * 0.05;
+            const forestW = 150;
+            const forestH = 150;
+            drawTree(forestX + 30, forestY + 50, 60);
+            drawTree(forestX + 80, forestY + 30, 70);
+            drawTree(forestX + 130, forestY + 60, 55);
+            locations.push({ name: '南瓜森林入口', x: forestX, y: forestY, width: forestW, height: forestH });
+
+            // 胖波農場 (簡單的田地和小屋)
+            const farmX = mapWidth * 0.7;
+            const farmY = mapHeight * 0.65;
+            const farmW = 150;
+            const farmH = 120;
+            drawRect(farmX, farmY, farmW, farmH, '#c5e1a5', '#7cb342', 2); // 農田
+            drawHouse(farmX + farmW * 0.7, farmY + farmH * 0.4, farmW * 0.25, farmH * 0.4, '#a7ffeb', '#4db6ac'); // 農場小屋
+            drawText('胖波農場', farmX + farmW / 2, farmY + farmH * 0.5, '#424242', '18px 微軟正黑體');
+            locations.push({ name: '胖波農場', x: farmX, y: farmY, width: farmW, height: farmH });
+
+
+            // 中央廣場標示
+            drawCircle(canvas.width * 0.4, canvas.height * 0.5, 20, '#ffeb3b', '#fbc02d', 3);
+            drawText('廣場', canvas.width * 0.4, canvas.height * 0.5, '#333');
+        }
+
+        // --- Canvas 事件處理 ---
+        function handleCanvasClick(event) {
+            const rect = canvas.getBoundingClientRect(); // 獲取 Canvas 在視窗中的位置和大小
+            const scaleX = canvas.width / rect.width;    // 計算 X 軸縮放比例
+            const scaleY = canvas.height / rect.height;  // 計算 Y 軸縮放比例
+
+            // 點擊點在 Canvas 內部坐標系中的位置
+            const mouseX = (event.clientX - rect.left) * scaleX;
+            const mouseY = (event.clientY - rect.top) * scaleY;
+
+            for (let i = 0; i < locations.length; i++) {
+                const loc = locations[i];
+                // 檢查點擊是否落在熱區內
+                if (mouseX >= loc.x && mouseX <= loc.x + loc.width &&
+                    mouseY >= loc.y && mouseY <= loc.y + loc.height) {
+                    GameEventEmitter.emit('mapLocationClicked', loc.name);
+                    return; // 找到一個就跳出
+                }
+            }
+        }
+
+        // --- 畫面載入函數 ---
         function loadVillageMap() {
-            // 添加一個類別，以便在CSS中調整主畫面的對齊方式
-            mainScreen.classList.add('ascii-map-mode');
-            mainScreen.innerHTML = `
-                <pre id="ascii-map-container">
-            _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-           |                                                               |
-           |        南瓜森林入口                                           |
-           |    🌲🌲🌲🌲🌲🌲🌲🌲                                         |
-           |    🌲           🌲                                          |
-           |    🌲           🌲                                          |
-           |    🌲   <M>     🌲           村長市政廳                       |
-           |    🌲🌲🌲🌲🌲🌲🌲🌲           [ ] [ ] [ ] [ ] [ ] [ ]       |
-           |                                   [ ] [ ] [ ] [ ] [ ] [ ]       |
-           |                                                               |
-           |                                                               |
-           |                                                               |
-           |                                                               |
-           |     波兔雜貨店                                  熊大鐵匠鋪      |
-           |     [__]                                        [_|_|]      |
-           |     /  \\                                       | | |       |
-           |    |    |                                       |_____|      |
-           |    |____|                                                    |
-           |                                                               |
-           |                                                               |
-           |                                                               |
-           |     我的小屋                                   胖波農場       |
-           |    /\\_/\                                        ---        |
-           |   ( ' ' )                                        | |        |
-           |    > ^ <                                        |___|       |
-           |                                                               |
-           |                                                               |
-           |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|
-                </pre>
-                <div class="map-location" id="loc-shop" data-name="波兔雜貨店"
-                     style="left: 10%; top: 46%; width: 15%; height: 12%;">
-                    <span class="location-name">波兔雜貨店</span>
-                </div>
-                <div class="map-location" id="loc-blacksmith" data-name="熊大鐵匠鋪"
-                     style="left: 65%; top: 46%; width: 15%; height: 12%;">
-                    <span class="location-name">熊大鐵匠鋪</span>
-                </div>
-                <div class="map-location" id="loc-townhall" data-name="村長市政廳"
-                     style="left: 45%; top: 30%; width: 20%; height: 15%;">
-                    <span class="location-name">村長市政廳</span>
-                </div>
-                <div class="map-location" id="loc-home" data-name="我的小屋"
-                     style="left: 18%; top: 72%; width: 15%; height: 12%;">
-                    <span class="location-name">我的小屋</span>
-                </div>
-                <div class="map-location" id="loc-forest" data-name="南瓜森林入口"
-                     style="left: 15%; top: 10%; width: 20%; height: 20%;">
-                    <span class="location-name">南瓜森林入口</span>
-                </div>
-                 <div class="map-location" id="loc-farm" data-name="胖波農場"
-                     style="left: 65%; top: 72%; width: 15%; height: 12%;">
-                    <span class="location-name">胖波農場</span>
-                </div>
-            `;
+            // 清空主畫面，並添加 Canvas 元素
+            mainScreen.innerHTML = '<canvas id="game-canvas"></canvas>';
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
 
-            const locations = mainScreen.querySelectorAll('.map-location');
-            locations.forEach(locationDiv => {
-                locationDiv.addEventListener('click', () => {
-                    const locationName = locationDiv.dataset.name;
-                    GameEventEmitter.emit('mapLocationClicked', locationName);
-                });
-            });
+            // 設置 Canvas 尺寸，使其填滿父容器 (main-screen)
+            // 這裡設定固定尺寸以簡化繪圖座標，實際應用可能需要根據 mainScreen 尺寸動態調整
+            canvas.width = mapWidth;
+            canvas.height = mapHeight;
+
+            // 繪製地圖
+            drawVillageMapCanvas();
+
+            // 為 Canvas 添加點擊事件監聽器
+            canvas.addEventListener('click', handleCanvasClick);
 
             addMessage('你進入了陽光普照的波兔村。', 'system');
             GameEventEmitter.emit('screenChanged', 'VillageMap');
         }
 
-        function loadInventoryScreen() {
-            mainScreen.classList.remove('ascii-map-mode'); // 移除地圖模式的對齊樣式
+        function unloadCanvas() {
+            if (canvas) {
+                canvas.removeEventListener('click', handleCanvasClick);
+                canvas.parentNode.removeChild(canvas); // 移除 Canvas 元素
+                canvas = null;
+                ctx = null;
+                locations = []; // 清空熱區數據
+            }
+        }
+
+        // 通用畫面切換 (在切換到這些畫面時，需要移除 Canvas 和其事件)
+        function loadGenericScreen(title, content) {
+            unloadCanvas(); // 切換到非地圖畫面時移除 Canvas
             mainScreen.innerHTML = `
                 <div class="generic-screen">
-                    <h3>我的物品</h3>
-                    <p>你目前沒有任何物品。(背包空空如也)</p>
-                    <p>未來你可以在這裡整理裝備、使用道具。</p>
+                    <h3>${title}</h3>
+                    <p>${content}</p>
                 </div>
             `;
+        }
+
+        function loadInventoryScreen() {
+            loadGenericScreen(
+                '我的物品',
+                '你目前沒有任何物品。(背包空空如也)<br>未來你可以在這裡整理裝備、使用道具。'
+            );
             addMessage('你打開了物品清單。', 'system');
             GameEventEmitter.emit('screenChanged', 'Inventory');
         }
 
         function loadSkillsScreen() {
-            mainScreen.classList.remove('ascii-map-mode'); // 移除地圖模式的對齊樣式
-            mainScreen.innerHTML = `
-                <div class="generic-screen">
-                    <h3>學習技能</h3>
-                    <p>你還沒有學習任何技能。(前往訓練師學習吧)</p>
-                    <p>未來這裡會顯示你學到的技能和技能點數。</p>
-                </div>
-            `;
+            loadGenericScreen(
+                '學習技能',
+                '你還沒有學習任何技能。(前往訓練師學習吧)<br>未來這裡會顯示你學到的技能和技能點數。'
+            );
             addMessage('你查看了技能。', 'system');
             GameEventEmitter.emit('screenChanged', 'Skills');
         }
 
         function loadStatusScreen() {
-            mainScreen.classList.remove('ascii-map-mode'); // 移除地圖模式的對齊樣式
-            mainScreen.innerHTML = `
-                <div class="generic-screen">
-                    <h3>角色狀態</h3>
-                    <p>名稱：冒險者</p>
-                    <p>等級：1</p>
-                    <p>生命值：100/100</p>
-                    <p>金幣：50</p>
-                    <p>經驗值：0/100</p>
-                </div>
-            `;
+            loadGenericScreen(
+                '角色狀態',
+                `名稱：冒險者<br>等級：1<br>生命值：100/100<br>金幣：50<br>經驗值：0/100`
+            );
             addMessage('你查看了你的角色狀態。', 'system');
             GameEventEmitter.emit('screenChanged', 'Status');
         }
@@ -410,7 +515,7 @@
                     loadVillageMap();
                     currentScreen = 'villageMap';
                 } else {
-                    addMessage('你已經在地圖畫面了，可以點擊地圖上的地點。', 'system');
+                    addMessage('你已經在地圖畫面了，請點擊地圖上的地點。', 'system');
                 }
             });
 
@@ -441,27 +546,24 @@
             switch (locationName) {
                 case '波兔雜貨店':
                     addMessage('雜貨店老闆胖波說：「歡迎光臨！想買些什麼呢？」', 'dialog');
-                    // TODO: 載入商店介面
                     break;
                 case '熊大鐵匠鋪':
                     addMessage('鐵匠熊大正在叮叮噹噹地敲打著什麼。', 'dialog');
-                    // TODO: 載入鐵匠鋪介面
                     break;
                 case '南瓜森林入口':
                     addMessage('森林深處傳來未知生物的聲音，你準備好前往冒險了嗎？', 'dialog');
-                    // TODO: 載入探索或戰鬥畫面
                     break;
                 case '我的小屋':
                     addMessage('這是你溫馨的小屋，讓你感到放鬆。', 'dialog');
-                    // TODO: 休息/回復介面
                     break;
                 case '村長市政廳':
                     addMessage('村長正在市政廳裡等待著，似乎有新任務。', 'dialog');
-                    // TODO: 任務介面
                     break;
                 case '胖波農場':
                     addMessage('胖波正在農場裡辛勤地種植蘿蔔。', 'dialog');
-                    // TODO: 農場互動或小遊戲
+                    break;
+                case '廣場':
+                    addMessage('村莊廣場上陽光普照，孩子們正在嬉戲。', 'dialog');
                     break;
                 default:
                     break;
