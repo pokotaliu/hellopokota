@@ -49,6 +49,8 @@ export class Game {
         this.currentMapElement = document.getElementById('current-map');
         this.gameTimeElement = document.getElementById('game-time');
 
+        this.lastToggleAutoCombatPress = 0; // 用於防止自動戰鬥模式頻繁切換
+
         this._addEventListeners();
         this._initializeGame();
     }
@@ -80,6 +82,10 @@ export class Game {
         });
         window.addEventListener('keyup', (e) => {
             this.keys[e.code] = false;
+            // 處理 A 鍵的彈起，以確保只在按下時觸發一次自動戰鬥切換
+            if (e.code === 'KeyA') {
+                this.lastToggleAutoCombatPress = 0;
+            }
         });
 
         document.getElementById('startGameBtn').addEventListener('click', () => {
@@ -95,6 +101,47 @@ export class Game {
         this.restartButton.addEventListener('click', () => {
             this.restartGame();
         });
+
+        // ====== 移動設備觸控控制事件處理 ======
+        const isMobile = /Mobi|Tablet|iPad|iPhone|Android/.test(navigator.userAgent);
+        const mobileControlsDiv = document.getElementById('mobile-controls');
+        if (isMobile && mobileControlsDiv) {
+            mobileControlsDiv.style.display = 'flex'; // 顯示虛擬按鈕容器
+            document.querySelector('.controls').style.display = 'none'; // 隱藏文字說明
+
+            const setupButtonTouch = (btnId, keyCode, isToggle = false) => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.keys[keyCode] = true;
+                        if (isToggle && !this.lastToggleAutoCombatPress) {
+                            this.player.isAutoCombatMode = !this.player.isAutoCombatMode;
+                            console.log(`Pokota Auto Combat: ${this.player.isAutoCombatMode ? 'ON' : 'OFF'}`);
+                            this.lastToggleAutoCombatPress = performance.now();
+                        }
+                    });
+                    btn.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        this.keys[keyCode] = false;
+                        if (isToggle) {
+                            this.lastToggleAutoCombatPress = 0; // 重置狀態
+                        }
+                    });
+                    // 防止觸摸移動事件干擾按鈕點擊
+                    btn.addEventListener('touchmove', (e) => {
+                        e.preventDefault();
+                    });
+                }
+            };
+
+            setupButtonTouch('up-btn', 'ArrowUp');
+            setupButtonTouch('down-btn', 'ArrowDown');
+            setupButtonTouch('left-btn', 'ArrowLeft');
+            setupButtonTouch('right-btn', 'ArrowRight');
+            setupButtonTouch('attack-btn', 'Space');
+            setupButtonTouch('auto-combat-btn', 'KeyA', true); // 自動戰鬥按鈕需要特殊處理
+        }
     }
 
     startGame() {
@@ -125,6 +172,7 @@ export class Game {
         this.projectiles = [];
         this.lastAttackTime = 0;
         this.keys = {};
+        this.lastToggleAutoCombatPress = 0;
 
         // 重新載入初始地圖並將玩家傳送到出生點
         this.currentMapId = GAME_CONSTANTS.MAP_VILLAGE_ID;
@@ -257,10 +305,10 @@ export class Game {
                 this.player.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), this.shootCarrot.bind(this), currentTime);
             } else {
                 // 手動控制
-                this._handlePlayerInput();
+                this._handlePlayerInput(currentTime); // 傳入 currentTime
             }
         } else { // BrownBear
-            this._handlePlayerInput();
+            this._handlePlayerInput(currentTime); // 傳入 currentTime
         }
 
         this.physicsEngine.updateCharacterMovement(this.player);
@@ -283,7 +331,7 @@ export class Game {
                     // 需要為投射物和僵屍設定 collisionRadius
                     const projectileCollisionRadius = p.tileSize * 0.1; // 蘿蔔飛彈的半徑
                     if (this.physicsEngine.checkCollision(
-                        { pxX: p.x, pxY: p.y, collisionRadius: projectileCollisionRadius },
+                        { pxX: p.pxX, pxY: p.pxY, collisionRadius: projectileCollisionRadius, tileSize: p.tileSize }, // 傳遞 tileSize
                         enemy
                     )) {
                         enemy.takeDamage(p.damage);
@@ -306,9 +354,18 @@ export class Game {
         this.updateUI();
     }
 
-    _handlePlayerInput() {
+    // 將 currentTime 作為參數傳入，用於攻擊冷卻時間判斷
+    _handlePlayerInput(currentTime) {
         // 如果玩家正在移動中，不允許新的移動指令，直到到達目標磁磚
         if (this.player.isMoving) {
+            // 但允許切換自動戰鬥模式或嘗試攻擊，即使在移動中
+            if (this.keys['KeyA']) {
+                if (currentTime - this.lastToggleAutoCombatPress > 200) { // 短暫冷卻，防止長按頻繁切換
+                    this.player.isAutoCombatMode = !this.player.isAutoCombatMode;
+                    console.log(`Pokota Auto Combat: ${this.player.isAutoCombatMode ? 'ON' : 'OFF'}`);
+                    this.lastToggleAutoCombatPress = currentTime;
+                }
+            }
             return;
         }
         
@@ -329,18 +386,17 @@ export class Game {
 
         // 如果玩家類型是胖波，且按下 'A' 鍵，切換自動戰鬥模式
         if (this.player.type === 'pokota' && this.keys['KeyA']) {
-            // 只在按鍵按下瞬間切換，避免長按頻繁切換
-            if (!this.lastToggleAutoCombatPress) { // 檢查上次切換時間
+            if (currentTime - this.lastToggleAutoCombatPress > 200) { // 短暫冷卻，防止長按頻繁切換
                 this.player.isAutoCombatMode = !this.player.isAutoCombatMode;
                 console.log(`Pokota Auto Combat: ${this.player.isAutoCombatMode ? 'ON' : 'OFF'}`);
-                this.lastToggleAutoCombatPress = performance.now();
+                this.lastToggleAutoCombatPress = currentTime;
             }
-        } else {
-            this.lastToggleAutoCombatPress = null; // 重置按鍵狀態
+        } else if (!this.keys['KeyA']) {
+             this.lastToggleAutoCombatPress = 0; // 當 A 鍵放開時重置，允許再次按下
         }
 
+
         // 攻擊
-        const currentTime = performance.now();
         if (this.keys['Space'] && currentTime - this.lastAttackTime > GAME_CONSTANTS.ATTACK_INTERVAL) {
             if (this.player.type === 'pokota') {
                 if (this.carrots > 0) {
@@ -394,12 +450,13 @@ export class Game {
         if (!targetEnemy && this.enemies.length > 0) {
             let closestDist = Infinity;
             this.enemies.forEach(enemy => {
-                const dist = Math.sqrt(
-                    Math.pow(enemy.x - this.player.x, 2) +
-                    Math.pow(enemy.y - this.player.y, 2)
+                // 使用像素距離來判斷最近的敵人
+                const distPx = Math.sqrt(
+                    Math.pow((enemy.pxX + this.TILE_SIZE / 2) - (this.player.pxX + this.TILE_SIZE / 2), 2) +
+                    Math.pow((enemy.pxY + this.TILE_SIZE / 2) - (this.player.pxY + this.TILE_SIZE / 2), 2)
                 );
-                if (dist < closestDist) {
-                    closestDist = dist;
+                if (distPx < closestDist) {
+                    closestDist = distPx;
                     targetEnemy = enemy;
                 }
             });
