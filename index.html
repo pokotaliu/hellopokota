@@ -1,284 +1,119 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-    <title>胖波的可愛村莊</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokota's Adventure</title>
     <style>
-        /* CSS 變數：讓顏色管理更方便 */
-        :root {
-            /* 這些顏色會在 JS 中根據當前地圖動態設定 */
-            --sky-start-color: #a7d9f7;
-            --sky-end-color: #d1edff;
-            --ground-color: #fce8f0;
-            --grass-base-color: #ccf5d4;
-            --grass-detail-color: #a4e6b1;
-
-            --canvas-border-color: #ff88aa;
-            --house-wall-color: #f7b05b;
-            --house-roof-color: #e07b39;
-            --house-door-window-color: #9c5c37;
-            --tree-trunk-color: #8b4513;
-            --tree-leaves-color: #6da251;
-            --carrot-body-color: #ffa500;
-            --carrot-leaf-color: #3cb371;
-            --pokota-body-color: #ffb3d1;
-            --pokota-eye-color: #333; /* 胖波眼睛色 (瞳孔) */
-            --pokota-eye-white-color: #ffffff; /* 胖波眼睛白色部分 */
-            --pokota-cheek-color: #ff7fba;
-            --pokota-snout-color: #8B4513; /* 胖波鼻部顏色 (棕色) */
-            --pokota-inner-ear-color: #ff6699; /* 胖波內耳顏色 (深粉色) */
-            --pokota-foot-color: #ffb3d1; /* 胖波腳的顏色，與身體相同 */
-            --zombie-body-color: #6a964e; /* 僵屍身體色 (綠色) */
-            --zombie-eye-color: #ff0000; /* 僵屍眼睛色 (紅色) */
-            --rock-color: #606060; /* 岩石顏色 */
-            --skull-color: #c0c0c0; /* 骷髏顏色 */
-            --portal-color: #8a2be2; /* 傳送門顏色 (藍紫色) */
-
-            --button-bg-color: #ffb3d1;
-            --button-text-color: white;
-            --button-hover-color: #ff99c1;
-            --button-active-color: #ff7fba;
-            --spawn-button-color: #4CAF50;
-            --spawn-button-hover-color: #45a049;
-            --spawn-button-active-color: #367c39;
-
-            /* 新增熊大的顏色變數 */
-            --brown-bear-body: #8B4513;
-            --brown-bear-snout: #D2B48C;
-            --brown-bear-nose: #333333;
-            --brown-bear-eye: #000000;
-            --brown-bear-inner-ear: #A0522D;
-            --brown-bear-club: #5A2D0C;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            /* 背景顏色會由 JS 動態設定 */
-            background: linear-gradient(to bottom, var(--sky-start-color) 0%, var(--sky-end-color) 50%, var(--ground-color) 100%);
-            font-family: 'Comic Sans MS', cursive, sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
-            padding: 20px;
-            overflow: hidden;
-            transition: background 1s ease-in-out; /* 背景切換動畫 */
-            /* 禁用 iOS 上的雙擊縮放 */
-            touch-action: manipulation;
+            background-color: #282c34;
+            margin: 0;
+            overflow: hidden; /* 防止滾動條 */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #eee;
         }
-
-        h1 {
-            color: #d85785;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 3px rgba(255,255,255,0.7);
-            font-size: 3em;
-        }
-
         canvas {
-            border: 4px solid var(--canvas-border-color);
-            border-radius: 8px;
-            background: var(--grass-base-color); /* Canvas 背景作為草地基礎色，會動態更新 */
-            image-rendering: pixelated;
-            max-width: 100%;
-            height: auto;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            border: 2px solid #61dafb;
+            background-color: #1a1a1a;
+            display: block; /* 移除圖片底部間隙 */
         }
-
-        .btn-panel {
+        .game-container {
+            text-align: center;
+            background-color: #3a3f47;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #61dafb;
+            margin-bottom: 10px;
+        }
+        .controls, .game-info {
+            margin-top: 15px;
+            font-size: 1.1em;
+            line-height: 1.6;
+            text-align: left;
+            padding: 0 20px;
+        }
+        .game-info p {
+            margin: 5px 0;
+        }
+        .button-container {
             margin-top: 20px;
-            display: grid;
-            grid-template-areas:
-                ". up ."
-                "left . right"
-                ". down ."
-                "spawn spawn spawn"
-                "switch switch switch"; /* 新增切換按鈕的網格區域 */
-            gap: 10px;
-            max-width: 250px;
         }
-
-        .btn-panel button {
+        button {
             padding: 10px 20px;
-            font-size: 20px;
-            border-radius: 12px;
-            border: none;
-            background-color: var(--button-bg-color);
-            color: var(--button-text-color);
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            font-size: 1.2em;
+            margin: 0 10px;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            width: 70px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border: none;
+            border-radius: 5px;
+            background-color: #61dafb;
+            color: #282c34;
+            transition: background-color 0.3s ease;
         }
-        #spawnZombieBtn {
-            grid-area: spawn;
-            width: auto;
-            padding: 15px 30px;
-            background-color: var(--spawn-button-color);
-            font-size: 22px;
+        button:hover {
+            background-color: #21a1f1;
+            color: white;
         }
-        #spawnZombieBtn:hover {
-            background-color: var(--spawn-button-hover-color);
-        }
-        #spawnZombieBtn:active {
-            background-color: var(--spawn-button-active-color);
-        }
-
-        /* 新增切換角色按鈕樣式 */
-        #switchCharacterBtn {
-            grid-area: switch;
-            width: auto;
-            padding: 15px 30px;
-            background-color: #6a5acd; /* 藍紫色 */
-            font-size: 22px;
-        }
-        #switchCharacterBtn:hover {
-            background-color: #5a4acb;
-        }
-        #switchCharacterBtn:active {
-            background-color: #4a3aac;
-        }
-
-
-        .btn-panel button:hover {
-            background-color: var(--button-hover-color);
-            transform: translateY(-2px);
-        }
-
-        button:active {
-            background-color: var(--button-active-color);
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        #moveUpBtn { grid-area: up; }
-        #moveLeftBtn { grid-area: left; }
-        #moveRightBtn { grid-area: right; }
-        #moveDownBtn { grid-area: down; }
-
-        /* 遊戲資訊面板 */
-        #gameInfo {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #d85785;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border-radius: 8px;
-            border: 2px solid var(--canvas-border-color);
-            z-index: 10; /* 確保在畫布上方 */
-        }
-        #pokotaHPDisplay {
-            color: green;
-        }
-        #autoCombatStatus {
-            margin-top: 5px;
-            color: #4CAF50; /* 綠色表示自動戰鬥 */
-            font-size: 0.9em;
-        }
-        #gameOverOverlay {
+        #message-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
+            color: white;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 3em;
-            text-shadow: 2px 2px 4px black;
-            z-index: 20;
+            align-items: center;
+            font-size: 2em;
+            text-align: center;
             display: none; /* 預設隱藏 */
+            z-index: 100;
         }
-        #restartButton {
+        #message-overlay button {
             margin-top: 20px;
-            padding: 15px 30px;
-            font-size: 24px;
-            border-radius: 12px;
-            border: none;
-            background-color: #ff5555;
+            font-size: 1.5em;
+        }
+        #health-bar, #carrot-count, #game-time, #current-map {
             color: white;
             font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-        }
-        #restartButton:hover {
-            background-color: #ee4444;
-            transform: translateY(-2px);
-        }
-        #restartButton:active {
-            background-color: #dd3333;
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
     </style>
-    <script>
-        // 禁用雙擊縮放和兩指縮放
-        document.addEventListener('touchstart', function(event) {
-            // 阻止兩指縮放 (pinch zoom)
-            if (event.touches.length > 1) {
-                event.preventDefault();
-            }
-        }, { passive: false }); // { passive: false } 允許阻止預設行為
-
-        document.addEventListener('touchmove', function(event) {
-            // 阻止兩指縮放 (pinch zoom)
-            if (event.touches.length > 1) {
-                event.preventDefault();
-            }
-        }, { passive: false });
-
-        // 阻止雙擊縮放 (針對桌面瀏覽器或部分行動瀏覽器)
-        document.addEventListener('dblclick', function(event) {
-            event.preventDefault();
-        }, { passive: false });
-
-        // 針對 IE/Edge 的觸控行為
-        document.addEventListener('pointerdown', function(event) {
-            if (event.pointerType === 'touch' && event.touches && event.touches.length > 1) {
-                event.preventDefault();
-            }
-        }, { passive: false });
-    </script>
 </head>
 <body>
-    <h1>胖波的可愛村莊</h1>
-    <canvas id="gameCanvas"></canvas>
-    <div class="btn-panel">
-        <button id="moveUpBtn">⬆</button>
-        <button id="moveLeftBtn">⬅</button>
-        <button id="moveRightBtn">➡</button>
-        <button id="moveDownBtn">⬇</button>
-        <button id="spawnZombieBtn">生成僵屍</button>
-        <button id="switchCharacterBtn">切換角色</button> </div>
-
-    <div id="gameInfo">
-        HP: <span id="pokotaHPDisplay">100</span> / 100
-        <div id="autoCombatStatus"></div>
+    <div class="game-container">
+        <h1>Pokota's Adventure</h1>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="game-info">
+            <p>生命值: <span id="health-bar"></span></p>
+            <p>蘿蔔數量: <span id="carrot-count"></span></p>
+            <p>當前地圖: <span id="current-map"></span></p>
+            <p>遊戲時間: <span id="game-time">00:00</span></p>
+        </div>
+        <div class="controls">
+            <p>移動: 方向鍵 (↑ ↓ ← →)</p>
+            <p>胖波攻擊 (遠程): 空白鍵</p>
+            <p>熊大攻擊 (近戰): 空白鍵</p>
+            <p>胖波自動戰鬥開/關: A 鍵</p>
+        </div>
+        <div class="button-container">
+            <button id="startGameBtn">開始遊戲</button>
+            <button id="togglePlayerBtn">切換角色</button>
+        </div>
     </div>
 
-    <div id="gameOverOverlay">
-        <p>遊戲結束！胖波死了...</p>
-        <button id="restartButton">重新開始</button>
+    <div id="message-overlay">
+        <p id="overlay-text"></p>
+        <button id="restartGameBtn" style="display: none;">重新開始</button>
     </div>
 
-    <script type="module" src="./js/game.js"></script>
+    <script type="module" src="js/game.js"></script>
 </body>
 </html>
