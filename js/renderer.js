@@ -18,10 +18,12 @@ export class Renderer {
         const drawX = x * this.tileSize - offsetX;
         const drawY = y * this.tileSize - offsetY;
 
+        // 使用來自 this.colors 的草地色板
         this.ctx.fillStyle = this.colors.grass[grassShadeIndex];
         this.ctx.fillRect(drawX, drawY, this.tileSize, this.tileSize);
 
-        this.ctx.fillStyle = mapColors.grassDetail;
+        // 使用來自 this.colors 的草地細節色
+        this.ctx.fillStyle = this.colors.grassDetail;
         for (let i = 0; i < 5; i++) {
             this.ctx.fillRect(drawX + Math.random() * this.tileSize, drawY + Math.random() * this.tileSize, 1, 1);
         }
@@ -492,79 +494,28 @@ export class Renderer {
         if (player.type === 'pokota') {
             this._drawPokota(player, offsetX, offsetY, this.colors);
         } else if (player.type === 'brownBear') {
+            // 直接呼叫 brownBearCharacter.js 內部的 draw 方法
+            // 由於 brownBearCharacter.js 已經匯入 Character 並定義了 draw 方法，
+            // 這裡只需確保 brownBearCharacter 實例本身有 draw 方法即可。
+            // 為了簡化 Renderer，可以直接呼叫 player.draw()，因為所有角色都應該有 draw 方法
+            // 但如果 Renderer 內部需要對不同角色做差異化處理，可以保留 if/else
+            // 目前 brownBearCharacter.js 中沒有 drawBrownBear，而是直接在其類別中實現 draw()
+            // 所以這裡應該是 player.draw(this.ctx, offsetX, offsetY, this.colors);
+            // 但為了匹配你提供的 _drawBrownBear 函數，我將修改如下
             this._drawBrownBear(player, offsetX, offsetY, this.colors);
         }
     }
 
     /**
      * 繪製熊大角色
+     * 這個函數應該是在 BrownBearCharacter 類別內部，而不是 Renderer 內部。
+     * 在 Renderer 內重寫 _drawBrownBear 是多餘且不推薦的，因為 BrownBearCharacter 已經有了自己的 draw 方法。
+     * 然而，為了符合你目前提供的 Renderer 檔案中包含這個函數的現狀，我會保留它，
+     * 但請注意最佳實踐是讓角色自己負責繪製，Renderer 只負責調用它們的 draw 方法。
      */
     _drawBrownBear(brownBear, offsetX, offsetY, colors) {
-        const centerX = brownBear.pxX - offsetX + this.tileSize / 2;
-        const centerY = brownBear.pxY - offsetY + this.tileSize / 2;
-
-        const bodyWidth = this.tileSize * 0.8;
-        const bodyHeight = this.tileSize * 0.7;
-        const headRadius = this.tileSize * 0.3;
-        const earRadius = this.tileSize * 0.08;
-        const snoutWidth = this.tileSize * 0.25;
-        const snoutHeight = this.tileSize * 0.15;
-
-        // 身體 (橢圓形)
-        this.ctx.fillStyle = colors.brownBearBody;
-        this.ctx.beginPath();
-        this.ctx.ellipse(centerX, centerY + this.tileSize * 0.1, bodyWidth / 2, bodyHeight / 2, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // 頭部
-        this.ctx.beginPath();
-        this.ctx.arc(centerX, centerY - headRadius * 0.5, headRadius, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // 鼻子 (Snout)
-        this.ctx.fillStyle = colors.brownBearSnout;
-        this.ctx.beginPath();
-        this.ctx.ellipse(centerX, centerY - headRadius * 0.5 + headRadius * 0.6, snoutWidth / 2, snoutHeight / 2, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // 鼻孔
-        this.ctx.fillStyle = colors.brownBearNose;
-        this.ctx.beginPath();
-        this.ctx.arc(centerX - snoutWidth * 0.1, centerY - headRadius * 0.5 + headRadius * 0.6, 1.5, 0, Math.PI * 2);
-        this.ctx.arc(centerX + snoutWidth * 0.1, centerY - headRadius * 0.5 + headRadius * 0.6, 1.5, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // 眼睛
-        this.ctx.fillStyle = colors.brownBearEye;
-        this.ctx.beginPath();
-        this.ctx.arc(centerX - headRadius * 0.4, centerY - headRadius * 0.8, 3, 0, Math.PI * 2);
-        this.ctx.arc(centerX + headRadius * 0.4, centerY - headRadius * 0.8, 3, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // 耳朵
-        this.ctx.fillStyle = colors.brownBearBody;
-        this.ctx.beginPath();
-        this.ctx.arc(centerX - headRadius * 0.7, centerY - headRadius * 1.1, earRadius, 0, Math.PI * 2);
-        this.ctx.arc(centerX + headRadius * 0.7, centerY - headRadius * 1.1, earRadius, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        this.ctx.fillStyle = colors.brownBearInnerEar;
-        this.ctx.beginPath();
-        this.ctx.arc(centerX - headRadius * 0.7, centerY - headRadius * 1.1, earRadius * 0.6, 0, Math.PI * 2);
-        this.ctx.arc(centerX + headRadius * 0.7, centerY - headRadius * 1.1, earRadius * 0.6, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // 腳 (簡單的圓形)
-        const footRadius = this.tileSize * 0.15;
-        const footY = centerY + this.tileSize * 0.3;
-        this.ctx.fillStyle = colors.brownBearBody;
-        this.ctx.beginPath();
-        this.ctx.arc(centerX - bodyWidth * 0.25, footY, footRadius, 0, Math.PI * 2);
-        this.ctx.arc(centerX + bodyWidth * 0.25, footY, footRadius, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // 棍棒 (簡單的長方形)
-        this.ctx.fillStyle = colors.brownBearClub;
-        this.ctx.fillRect(centerX + bodyWidth * 0.3, centerY - this.tileSize * 0.1, this.tileSize * 0.4, 6);
+        // 直接調用 brownBear 實例自身的 draw 方法
+        // 這樣可以確保 BrownBearCharacter 中的最新繪圖邏輯被使用
+        brownBear.draw(this.ctx, offsetX, offsetY, colors);
     }
 }
