@@ -55,15 +55,8 @@ export class PlayerCharacter extends Character {
             let nextTargetX = this.x;
             let nextTargetY = this.y;
 
-            const targetPxX_current = this.targetX * this.tileSize;
-            const targetPxY_current = this.targetY * this.tileSize;
-            const distToCurrentTarget = Math.sqrt(
-                Math.pow(targetPxX_current - this.pxX, 2) +
-                Math.pow(targetPxY_current - this.pxY, 2)
-            );
-
-            // 只有當到達當前目標磁磚時才計算新目標
-            if (distToCurrentTarget <= this.speedPx) {
+            // 判斷是否到達當前目標磁磚 (使用磁磚座標判斷，更可靠)
+            if (this.x === this.targetX && this.y === this.targetY) {
                 // 如果敵人在安全距離內，嘗試後退
                 if (distToClosestEnemy < GAME_CONSTANTS.POKOTA_SAFE_DISTANCE_TILES) {
                     // 嘗試遠離敵人
