@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>波兔村莊：Canvas 繪圖版</title>
+    <title>波兔村莊：精美華麗 Canvas 版</title>
     <style>
         /* 整體佈局 */
         body {
@@ -19,32 +19,34 @@
             display: flex;
             flex-direction: column;
             flex: 1;
-            max-width: 1200px; /* 限制遊戲寬度 */
+            max-width: 1400px; /* 稍微放大遊戲寬度 */
             width: 100%;
             margin: 0 auto; /* 居中顯示 */
             background-color: #fff;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15); /* 更明顯的陰影 */
+            border-radius: 12px; /* 更圓潤的邊角 */
             overflow: hidden;
         }
 
         /* 標題區塊 */
         #game-header {
-            background-color: #4dd0e1;
+            background-image: linear-gradient(to right, #4dd0e1, #26c6da); /* 漸變背景 */
             color: white;
-            padding: 15px 20px;
+            padding: 20px 25px; /* 增加內邊距 */
             text-align: center;
-            font-size: 1.5em;
+            font-size: 1.8em; /* 稍微增大字體 */
             font-weight: bold;
+            letter-spacing: 1px; /* 增加字距 */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2); /* 文字陰影 */
         }
 
         /* 遊戲主內容區 */
         #game-container {
             display: flex;
-            flex: 1; /* 讓內容區塊佔滿可用空間 */
-            padding: 15px;
-            gap: 15px; /* 元素間距 */
-            overflow: hidden; /* 防止內部元素溢出 */
+            flex: 1;
+            padding: 20px; /* 增加內邊距 */
+            gap: 20px; /* 元素間距 */
+            overflow: hidden;
         }
 
         /* 主畫面 - Canvas 模式下不居中內容，讓 Canvas 填滿 */
@@ -61,6 +63,8 @@
         #game-canvas {
             display: block; /* 消除底部多餘空間 */
             background-color: #81c784; /* 草地綠 */
+            width: 100%; /* 讓 Canvas 填滿父容器 */
+            height: 100%;
         }
 
         /* 訊息框 */
@@ -69,19 +73,24 @@
             background-color: #e0f7fa;
             border: 1px solid #b2ebf2;
             border-radius: 8px;
-            padding: 10px;
+            padding: 15px; /* 增加內邊距 */
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            font-size: 0.9em;
+            font-size: 0.95em; /* 稍微增大字體 */
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05); /* 內陰影 */
         }
         .message {
             background-color: #ffffff;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 5px;
+            padding: 10px; /* 增加內邊距 */
+            margin-bottom: 8px; /* 增加下邊距 */
+            border-radius: 8px; /* 更圓潤的邊角 */
             word-wrap: break-word;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 更明顯的陰影 */
+            transition: transform 0.2s ease; /* 訊息出現動畫 */
+        }
+        .message:hover {
+             transform: translateY(-2px); /* 鼠標懸停效果 */
         }
         .message.system {
             background-color: #fce4ec;
@@ -102,47 +111,54 @@
         #game-controls {
             display: flex;
             justify-content: center;
-            padding: 15px;
-            gap: 10px;
+            padding: 20px; /* 增加內邊距 */
+            gap: 15px; /* 增加間距 */
             background-color: #fafafa;
             border-top: 1px solid #b2ebf2;
             flex-wrap: wrap;
         }
         .game-button {
-            padding: 12px 20px;
-            font-size: 16px;
+            padding: 14px 25px; /* 增加內邊距 */
+            font-size: 17px; /* 增大字體 */
             cursor: pointer;
             background-color: #00bcd4;
             color: white;
             border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            min-width: 120px;
+            border-radius: 6px; /* 更圓潤的邊角 */
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            min-width: 130px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 按鈕陰影 */
         }
         .game-button:hover {
             background-color: #00acc1;
-            transform: translateY(-2px);
+            transform: translateY(-3px); /* 懸停效果 */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
         }
         .game-button:active {
             transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         /* 通用畫面樣式 */
         .generic-screen {
             text-align: center;
-            padding: 20px;
+            padding: 40px; /* 增加內邊距 */
             color: #333;
-            max-width: 80%;
-            margin: auto; /* 讓內容在主畫面中居中 */
+            max-width: 90%; /* 增加最大寬度 */
+            margin: auto;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         .generic-screen h3 {
-            font-size: 1.8em;
+            font-size: 2.2em; /* 增大字體 */
             color: #00796b;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
         .generic-screen p {
-            font-size: 1.1em;
-            line-height: 1.6;
+            font-size: 1.2em; /* 增大字體 */
+            line-height: 1.8; /* 增加行高 */
         }
 
         /* 響應式設計 */
@@ -162,7 +178,7 @@
             }
             #game-controls {
                 flex-direction: column;
-                gap: 8px;
+                gap: 10px;
             }
             .game-button {
                 width: 100%;
@@ -174,12 +190,13 @@
 
     <div id="game-wrapper">
         <header id="game-header">
-            波兔村莊大冒險
+            波兔村莊：Canvas 華麗版
         </header>
 
         <main id="game-container">
             <div id="main-screen">
-                </div>
+                <canvas id="game-canvas"></canvas>
+            </div>
             <div id="message-box">
                 <div class="message system">系統: 遊戲啟動中...</div>
             </div>
@@ -227,108 +244,230 @@
 
         // screenRenderer.js 內容 (已整合到此檔案中)
         const mainScreen = document.getElementById('main-screen');
-        let canvas = null;
-        let ctx = null;
+        let canvas = document.getElementById('game-canvas');
+        let ctx = canvas.getContext('2d');
         let locations = []; // 儲存地圖上可點擊區域的資訊
+        let hoverLocation = null; // 儲存當前鼠標懸停的地點
 
-        // --- 地圖繪圖相關函數 ---
-        const mapWidth = 800; // 地圖寬度
-        const mapHeight = 600; // 地圖高度
+        // --- 地圖繪圖相關配置 ---
+        const BASE_MAP_WIDTH = 1000; // 設計時的基準寬度
+        const BASE_MAP_HEIGHT = 700; // 設計時的基準高度
+        let scaleFactor = 1; // 根據實際 Canvas 尺寸調整的縮放比例
 
+        // Particle System for Fireflies
+        const fireflies = [];
+        const NUM_FIREFLIES = 30;
+        const FIREFLY_RADIUS = 1.5;
+
+        class Firefly {
+            constructor() {
+                this.x = Math.random() * BASE_MAP_WIDTH;
+                this.y = Math.random() * BASE_MAP_HEIGHT;
+                this.vx = (Math.random() - 0.5) * 1; // Random velocity
+                this.vy = (Math.random() - 0.5) * 1;
+                this.alpha = Math.random();
+                this.fadeSpeed = 0.01 + Math.random() * 0.01;
+                this.brightnessSpeed = 0.05 + Math.random() * 0.05;
+                this.phase = Math.random() * Math.PI * 2; // For sinusoidal brightness
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha = 0.5 + 0.5 * Math.sin(this.phase += this.brightnessSpeed); // Pulsating brightness
+
+                // Boundary check
+                if (this.x < 0 || this.x > BASE_MAP_WIDTH) this.vx *= -1;
+                if (this.y < 0 || this.y > BASE_MAP_HEIGHT) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = `rgba(255, 255, 150, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x * scaleFactor, this.y * scaleFactor, FIREFLY_RADIUS * scaleFactor, 0, Math.PI * 2);
+                ctx.shadowColor = 'yellow';
+                ctx.shadowBlur = 10 * scaleFactor;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Initialize fireflies
+        for (let i = 0; i < NUM_FIREFLIES; i++) {
+            fireflies.push(new Firefly());
+        }
+
+        // --- 輔助繪圖函數 (使用更複雜的樣式) ---
         function drawRect(x, y, width, height, color, strokeColor = null, lineWidth = 0) {
             ctx.fillStyle = color;
-            ctx.fillRect(x, y, width, height);
+            ctx.fillRect(x * scaleFactor, y * scaleFactor, width * scaleFactor, height * scaleFactor);
             if (strokeColor) {
                 ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = lineWidth;
-                ctx.strokeRect(x, y, width, height);
+                ctx.lineWidth = lineWidth * scaleFactor;
+                ctx.strokeRect(x * scaleFactor, y * scaleFactor, width * scaleFactor, height * scaleFactor);
             }
         }
 
         function drawCircle(x, y, radius, color, strokeColor = null, lineWidth = 0) {
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.arc(x * scaleFactor, y * scaleFactor, radius * scaleFactor, 0, Math.PI * 2);
             ctx.fill();
             if (strokeColor) {
                 ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = lineWidth;
+                ctx.lineWidth = lineWidth * scaleFactor;
                 ctx.stroke();
             }
         }
 
-        function drawText(text, x, y, color, font = '16px 微軟正黑體') {
+        function drawRoundedRect(x, y, width, height, radius, color, strokeColor = null, lineWidth = 0) {
             ctx.fillStyle = color;
-            ctx.font = font;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, x, y);
+            ctx.beginPath();
+            ctx.moveTo((x + radius) * scaleFactor, y * scaleFactor);
+            ctx.lineTo((x + width - radius) * scaleFactor, y * scaleFactor);
+            ctx.arcTo((x + width) * scaleFactor, y * scaleFactor, (x + width) * scaleFactor, (y + radius) * scaleFactor, radius * scaleFactor);
+            ctx.lineTo((x + width) * scaleFactor, (y + height - radius) * scaleFactor);
+            ctx.arcTo((x + width) * scaleFactor, (y + height) * scaleFactor, (x + width - radius) * scaleFactor, (y + height) * scaleFactor, radius * scaleFactor);
+            ctx.lineTo((x + radius) * scaleFactor, (y + height) * scaleFactor);
+            ctx.arcTo(x * scaleFactor, (y + height) * scaleFactor, x * scaleFactor, (y + height - radius) * scaleFactor, radius * scaleFactor);
+            ctx.lineTo(x * scaleFactor, (y + radius) * scaleFactor);
+            ctx.arcTo(x * scaleFactor, y * scaleFactor, (x + radius) * scaleFactor, y * scaleFactor, radius * scaleFactor);
+            ctx.closePath();
+            ctx.fill();
+            if (strokeColor) {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth * scaleFactor;
+                ctx.stroke();
+            }
         }
 
-        function drawHouse(x, y, width, height, bodyColor, roofColor) {
-            // Body
-            drawRect(x, y + height * 0.3, width, height * 0.7, bodyColor);
+        function drawText(text, x, y, color, font = '16px 微軟正黑體', shadow = false) {
+            ctx.fillStyle = color;
+            ctx.font = `${parseInt(font) * scaleFactor}px ${font.split(' ')[1] || '微軟正黑體'}`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            if (shadow) {
+                ctx.shadowColor = 'rgba(0,0,0,0.4)';
+                ctx.shadowBlur = 5 * scaleFactor;
+                ctx.shadowOffsetX = 2 * scaleFactor;
+                ctx.shadowOffsetY = 2 * scaleFactor;
+            }
+            ctx.fillText(text, x * scaleFactor, y * scaleFactor);
+            if (shadow) {
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            }
+        }
+
+        function drawHouse(x, y, width, height, bodyColor, roofColor, doorColor, windowColor) {
+            // Main body
+            drawRoundedRect(x, y + height * 0.3, width, height * 0.7, 5, bodyColor);
             // Roof
             ctx.fillStyle = roofColor;
             ctx.beginPath();
-            ctx.moveTo(x - 5, y + height * 0.3); // 左上角稍微超出
-            ctx.lineTo(x + width / 2, y);      // 屋頂尖端
-            ctx.lineTo(x + width + 5, y + height * 0.3); // 右上角稍微超出
+            ctx.moveTo((x - 5) * scaleFactor, (y + height * 0.3) * scaleFactor);
+            ctx.lineTo((x + width / 2) * scaleFactor, y * scaleFactor);
+            ctx.lineTo((x + width + 5) * scaleFactor, (y + height * 0.3) * scaleFactor);
             ctx.closePath();
             ctx.fill();
             // Door
-            drawRect(x + width * 0.4, y + height * 0.6, width * 0.2, height * 0.4, '#6d4c41');
+            drawRoundedRect(x + width * 0.4, y + height * 0.6, width * 0.2, height * 0.4, 3, doorColor);
+            // Window
+            drawRect(x + width * 0.15, y + height * 0.4, width * 0.2, height * 0.15, windowColor);
+            drawRect(x + width * 0.65, y + height * 0.4, width * 0.2, height * 0.15, windowColor);
         }
 
         function drawShop(x, y, width, height) {
-            drawRect(x, y + height * 0.2, width, height * 0.8, '#ffcc80', '#e65100', 2); // Body
+            drawRoundedRect(x, y + height * 0.2, width, height * 0.8, 8, '#ffcc80'); // Body
             drawRect(x + width * 0.1, y + height * 0.3, width * 0.8, height * 0.5, '#bbdefb'); // Window
-            drawText('商店', x + width / 2, y + height * 0.6, '#333');
+            drawText('雜貨店', x + width / 2, y + height * 0.5, '#333', '18px 微軟正黑體', true);
             ctx.fillStyle = '#ff8a65'; // Roof
             ctx.beginPath();
-            ctx.moveTo(x, y + height * 0.2);
-            ctx.lineTo(x + width / 2, y);
-            ctx.lineTo(x + width, y + height * 0.2);
+            ctx.moveTo(x * scaleFactor, (y + height * 0.2) * scaleFactor);
+            ctx.lineTo((x + width / 2) * scaleFactor, y * scaleFactor);
+            ctx.lineTo((x + width) * scaleFactor, (y + height * 0.2) * scaleFactor);
             ctx.closePath();
             ctx.fill();
         }
 
         function drawBlacksmith(x, y, width, height) {
-            drawRect(x, y + height * 0.2, width, height * 0.8, '#bdbdbd', '#424242', 2); // Body
+            drawRoundedRect(x, y + height * 0.2, width, height * 0.8, 8, '#bdbdbd'); // Body
             drawRect(x + width * 0.2, y + height * 0.5, width * 0.6, height * 0.3, '#795548'); // Door
-            drawText('鐵匠鋪', x + width / 2, y + height * 0.6, '#333');
+            drawText('鐵匠鋪', x + width / 2, y + height * 0.6, '#333', '18px 微軟正黑體', true);
             ctx.fillStyle = '#616161'; // Roof
             ctx.beginPath();
-            ctx.moveTo(x, y + height * 0.2);
-            ctx.lineTo(x + width / 2, y);
-            ctx.lineTo(x + width, y + height * 0.2);
+            ctx.moveTo(x * scaleFactor, (y + height * 0.2) * scaleFactor);
+            ctx.lineTo((x + width / 2) * scaleFactor, y * scaleFactor);
+            ctx.lineTo((x + width) * scaleFactor, (y + height * 0.2) * scaleFactor);
+            ctx.closePath();
+            ctx.fill();
+
+            // 火爐效果 (漸變色)
+            const gradient = ctx.createRadialGradient((x + width * 0.75) * scaleFactor, (y + height * 0.7) * scaleFactor, 5 * scaleFactor, (x + width * 0.75) * scaleFactor, (y + height * 0.7) * scaleFactor, 30 * scaleFactor);
+            gradient.addColorStop(0, 'rgba(255, 165, 0, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(255, 69, 0, 0.5)');
+            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            drawCircle(x + width * 0.75, y + height * 0.7, 30, gradient);
+        }
+
+        function drawTownHall(x, y, width, height) {
+            drawRoundedRect(x, y, width, height, 10, '#b3e5fc', '#0288d1', 3); // Body
+            drawRect(x + width * 0.35, y + height * 0.65, width * 0.3, height * 0.35, '#795548'); // Door
+            drawText('市政廳', x + width / 2, y + height * 0.4, '#333', '24px 微軟正黑體', true);
+            drawCircle(x + width / 2, y + height * 0.2, width * 0.1, '#fff', '#0288d1', 2); // Clock base
+            drawText('12', x + width / 2, y + height * 0.15, '#333', '10px Arial');
+            drawText('3', x + width / 2 + width * 0.08, y + height * 0.2, '#333', '10px Arial');
+            drawText('6', x + width / 2, y + height * 0.25, '#333', '10px Arial');
+            drawText('9', x + width / 2 - width * 0.08, y + height * 0.2, '#333', '10px Arial');
+            // Clock hands
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2 * scaleFactor;
+            ctx.beginPath();
+            ctx.moveTo((x + width / 2) * scaleFactor, (y + height * 0.2) * scaleFactor);
+            ctx.lineTo((x + width / 2) * scaleFactor, (y + height * 0.2 - width * 0.07) * scaleFactor);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo((x + width / 2) * scaleFactor, (y + height * 0.2) * scaleFactor);
+            ctx.lineTo((x + width / 2 + width * 0.05) * scaleFactor, (y + height * 0.2) * scaleFactor);
+            ctx.stroke();
+        }
+
+        function drawTree(x, y, size, trunkColor, leafColor) {
+            // Trunk
+            drawRect(x - size * 0.1, y + size * 0.3, size * 0.2, size * 0.7, trunkColor);
+            // Leaves (複雜形狀)
+            ctx.fillStyle = leafColor;
+            ctx.beginPath();
+            ctx.moveTo(x * scaleFactor, y * scaleFactor);
+            ctx.bezierCurveTo((x - size * 0.4) * scaleFactor, (y + size * 0.1) * scaleFactor,
+                             (x - size * 0.3) * scaleFactor, (y + size * 0.5) * scaleFactor,
+                             (x - size * 0.1) * scaleFactor, (y + size * 0.6) * scaleFactor);
+            ctx.bezierCurveTo((x + size * 0.1) * scaleFactor, (y + size * 0.7) * scaleFactor,
+                             (x + size * 0.3) * scaleFactor, (y + size * 0.7) * scaleFactor,
+                             (x + size * 0.4) * scaleFactor, (y + size * 0.6) * scaleFactor);
+            ctx.bezierCurveTo((x + size * 0.6) * scaleFactor, (y + size * 0.5) * scaleFactor,
+                             (x + size * 0.5) * scaleFactor, (y + size * 0.1) * scaleFactor,
+                             x * scaleFactor, y * scaleFactor);
             ctx.closePath();
             ctx.fill();
         }
 
-        function drawTownHall(x, y, width, height) {
-            drawRect(x, y, width, height, '#b3e5fc', '#0288d1', 2); // Body
-            drawRect(x + width * 0.2, y + height * 0.7, width * 0.6, height * 0.3, '#795548'); // Door
-            drawText('市政廳', x + width / 2, y + height * 0.4, '#333', '20px 微軟正黑體');
-            drawCircle(x + width / 2, y + height * 0.2, width * 0.1, '#fff', '#0288d1', 2); // Clock
-        }
+        function drawRiver(ctx, points, width) {
+            const riverGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            riverGradient.addColorStop(0, '#4fc3f7');
+            riverGradient.addColorStop(1, '#29b6f6');
 
-        function drawTree(x, y, size) {
-            // Trunk
-            drawRect(x - size * 0.1, y + size * 0.3, size * 0.2, size * 0.7, '#8d6e63');
-            // Leaves
-            drawCircle(x, y + size * 0.2, size * 0.3, '#4caf50');
-            drawCircle(x - size * 0.15, y + size * 0.3, size * 0.25, '#66bb6a');
-            drawCircle(x + size * 0.15, y + size * 0.3, size * 0.25, '#66bb6a');
-        }
-
-        function drawRiver(ctx, points, color, width) {
-            ctx.strokeStyle = color;
-            ctx.lineWidth = width;
+            ctx.strokeStyle = riverGradient;
+            ctx.lineWidth = width * scaleFactor;
+            ctx.lineCap = 'round'; // 圓頭
+            ctx.lineJoin = 'round'; // 圓角連接
             ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
+            ctx.moveTo(points[0].x * scaleFactor, points[0].y * scaleFactor);
             for (let i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x, points[i].y);
+                ctx.lineTo(points[i].x * scaleFactor, points[i].y * scaleFactor);
             }
             ctx.stroke();
         }
@@ -336,140 +475,209 @@
         // --- 繪製完整的波兔村地圖 ---
         function drawVillageMapCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
-            locations = []; // 清空之前的熱區
 
-            // 背景草地 (Canvas 預設背景色已設定，這裡可以不畫)
-            // drawRect(0, 0, canvas.width, canvas.height, '#81c784');
-
+            // 1. 背景層 (Grass, Roads, River)
+            // 草地背景已經是 Canvas 的背景色了
+            
             // 道路
-            ctx.fillStyle = '#a1887f'; // 棕色道路
-            ctx.fillRect(0, canvas.height * 0.5 - 20, canvas.width, 40); // 橫向主路
-            ctx.fillRect(canvas.width * 0.4 - 20, 0, 40, canvas.height); // 縱向主路
+            drawRect(0, BASE_MAP_HEIGHT * 0.5 - 20, BASE_MAP_WIDTH, 40, '#a1887f'); // 橫向主路
+            drawRect(BASE_MAP_WIDTH * 0.4 - 20, 0, 40, BASE_MAP_HEIGHT, '#a1887f'); // 縱向主路
 
             // 河流
             const riverPoints = [
-                { x: 0, y: canvas.height * 0.7 },
-                { x: canvas.width * 0.3, y: canvas.height * 0.8 },
-                { x: canvas.width * 0.6, y: canvas.height * 0.7 },
-                { x: canvas.width, y: canvas.height * 0.75 }
+                { x: 0, y: BASE_MAP_HEIGHT * 0.7 },
+                { x: BASE_MAP_WIDTH * 0.25, y: BASE_MAP_HEIGHT * 0.8 },
+                { x: BASE_MAP_WIDTH * 0.55, y: BASE_MAP_HEIGHT * 0.65 },
+                { x: BASE_MAP_WIDTH * 0.75, y: BASE_MAP_HEIGHT * 0.8 },
+                { x: BASE_MAP_WIDTH, y: BASE_MAP_HEIGHT * 0.7 }
             ];
-            drawRiver(ctx, riverPoints, '#4fc3f7', 30); // 藍色河流
+            drawRiver(ctx, riverPoints, 30); // 藍色河流
 
-            // 建築物和地點
+            // 2. 中景層 (Buildings, Trees)
+            locations = []; // 清空之前的熱區
+
+            // 市政廳
+            const townHallX = BASE_MAP_WIDTH * 0.35;
+            const townHallY = BASE_MAP_HEIGHT * 0.08;
+            const townHallW = 180;
+            const townHallH = 220;
+            drawTownHall(townHallX, townHallY, townHallW, townHallH);
+            locations.push({ name: '村長市政廳', x: townHallX, y: townHallY, width: townHallW, height: townHallH });
+
             // 商店
-            const shopX = mapWidth * 0.1;
-            const shopY = mapHeight * 0.4;
-            const shopW = 100;
-            const shopH = 120;
+            const shopX = BASE_MAP_WIDTH * 0.1;
+            const shopY = BASE_MAP_HEIGHT * 0.35;
+            const shopW = 120;
+            const shopH = 150;
             drawShop(shopX, shopY, shopW, shopH);
             locations.push({ name: '波兔雜貨店', x: shopX, y: shopY, width: shopW, height: shopH });
 
             // 鐵匠鋪
-            const blacksmithX = mapWidth * 0.7;
-            const blacksmithY = mapHeight * 0.35;
-            const blacksmithW = 110;
-            const blacksmithH = 130;
+            const blacksmithX = BASE_MAP_WIDTH * 0.68;
+            const blacksmithY = BASE_MAP_HEIGHT * 0.3;
+            const blacksmithW = 130;
+            const blacksmithH = 160;
             drawBlacksmith(blacksmithX, blacksmithY, blacksmithW, blacksmithH);
             locations.push({ name: '熊大鐵匠鋪', x: blacksmithX, y: blacksmithY, width: blacksmithW, height: blacksmithH });
 
-            // 市政廳
-            const townHallX = mapWidth * 0.4;
-            const townHallY = mapHeight * 0.1;
-            const townHallW = 150;
-            const townHallH = 180;
-            drawTownHall(townHallX, townHallY, townHallW, townHallH);
-            locations.push({ name: '村長市政廳', x: townHallX, y: townHallY, width: townHallW, height: townHallH });
-
-            // 我的小屋
-            const homeX = mapWidth * 0.25;
-            const homeY = mapHeight * 0.75;
-            const homeW = 90;
-            const homeH = 100;
-            drawHouse(homeX, homeY, homeW, homeH, '#f8bbd0', '#e57373'); // 粉紅小屋，紅色屋頂
+            // 我的小屋 (更精緻的屋子)
+            const homeX = BASE_MAP_WIDTH * 0.2;
+            const homeY = BASE_MAP_HEIGHT * 0.7;
+            const homeW = 110;
+            const homeH = 130;
+            drawHouse(homeX, homeY, homeW, homeH, '#f8bbd0', '#e57373', '#6d4c41', '#bbdefb');
             locations.push({ name: '我的小屋', x: homeX, y: homeY, width: homeW, height: homeH });
 
-            // 森林入口 (多棵樹)
-            const forestX = mapWidth * 0.05;
-            const forestY = mapHeight * 0.05;
-            const forestW = 150;
-            const forestH = 150;
-            drawTree(forestX + 30, forestY + 50, 60);
-            drawTree(forestX + 80, forestY + 30, 70);
-            drawTree(forestX + 130, forestY + 60, 55);
-            locations.push({ name: '南瓜森林入口', x: forestX, y: forestY, width: forestW, height: forestH });
-
             // 胖波農場 (簡單的田地和小屋)
-            const farmX = mapWidth * 0.7;
-            const farmY = mapHeight * 0.65;
-            const farmW = 150;
-            const farmH = 120;
-            drawRect(farmX, farmY, farmW, farmH, '#c5e1a5', '#7cb342', 2); // 農田
-            drawHouse(farmX + farmW * 0.7, farmY + farmH * 0.4, farmW * 0.25, farmH * 0.4, '#a7ffeb', '#4db6ac'); // 農場小屋
-            drawText('胖波農場', farmX + farmW / 2, farmY + farmH * 0.5, '#424242', '18px 微軟正黑體');
+            const farmX = BASE_MAP_WIDTH * 0.65;
+            const farmY = BASE_MAP_HEIGHT * 0.6;
+            const farmW = 200;
+            const farmH = 150;
+            drawRect(farmX, farmY, farmW, farmH, '#c5e1a5', '#7cb342', 3); // 農田
+            drawHouse(farmX + farmW * 0.75, farmY + farmH * 0.2, farmW * 0.2, farmH * 0.4, '#a7ffeb', '#4db6ac', '#4e342e', '#e0f2f7'); // 農場小屋
+            drawText('胖波農場', farmX + farmW / 2, farmY + farmH * 0.5, '#424242', '20px 微軟正黑體', true);
             locations.push({ name: '胖波農場', x: farmX, y: farmY, width: farmW, height: farmH });
 
+            // 森林入口 (多棵樹，層次感)
+            const forestX = BASE_MAP_WIDTH * 0.02;
+            const forestY = BASE_MAP_HEIGHT * 0.05;
+            const forestW = 200;
+            const forestH = 200;
+            drawTree(forestX + 50, forestY + 80, 70, '#795548', '#4caf50');
+            drawTree(forestX + 120, forestY + 50, 80, '#795548', '#388e3c');
+            drawTree(forestX + 180, forestY + 70, 65, '#795548', '#66bb6a');
+            locations.push({ name: '南瓜森林入口', x: forestX, y: forestY, width: forestW, height: forestH });
 
             // 中央廣場標示
-            drawCircle(canvas.width * 0.4, canvas.height * 0.5, 20, '#ffeb3b', '#fbc02d', 3);
-            drawText('廣場', canvas.width * 0.4, canvas.height * 0.5, '#333');
+            drawCircle(BASE_MAP_WIDTH * 0.4, BASE_MAP_HEIGHT * 0.5, 25, '#ffeb3b', '#fbc02d', 4);
+            drawText('廣場', BASE_MAP_WIDTH * 0.4, BASE_MAP_HEIGHT * 0.5, '#333', '22px 微軟正黑體', true);
+
+            // 3. 前景層 (Hover Highlights, Particles)
+            // 繪製懸停效果
+            if (hoverLocation) {
+                ctx.strokeStyle = '#ffeb3b'; // 黃色邊框
+                ctx.lineWidth = 5 * scaleFactor;
+                ctx.lineJoin = 'round';
+                ctx.strokeRect(hoverLocation.x * scaleFactor, hoverLocation.y * scaleFactor, hoverLocation.width * scaleFactor, hoverLocation.height * scaleFactor);
+                // 陰影
+                ctx.shadowColor = 'rgba(255,255,0,0.8)';
+                ctx.shadowBlur = 20 * scaleFactor;
+                ctx.strokeRect(hoverLocation.x * scaleFactor, hoverLocation.y * scaleFactor, hoverLocation.width * scaleFactor, hoverLocation.height * scaleFactor);
+                ctx.shadowBlur = 0; // 重置陰影
+            }
         }
 
         // --- Canvas 事件處理 ---
-        function handleCanvasClick(event) {
+        function getMousePos(canvas, evt) {
             const rect = canvas.getBoundingClientRect(); // 獲取 Canvas 在視窗中的位置和大小
-            const scaleX = canvas.width / rect.width;    // 計算 X 軸縮放比例
-            const scaleY = canvas.height / rect.height;  // 計算 Y 軸縮放比例
+            // 計算點擊點在 Canvas 內部坐標系中的位置 (考慮 CSS 縮放)
+            const x = ((evt.clientX - rect.left) / rect.width) * canvas.width;
+            const y = ((evt.clientY - rect.top) / rect.height) * canvas.height;
+            return { x: x / scaleFactor, y: y / scaleFactor }; // 返回未縮放的邏輯座標
+        }
 
-            // 點擊點在 Canvas 內部坐標系中的位置
-            const mouseX = (event.clientX - rect.left) * scaleX;
-            const mouseY = (event.clientY - rect.top) * scaleY;
-
+        function handleCanvasClick(event) {
+            const mousePos = getMousePos(canvas, event);
             for (let i = 0; i < locations.length; i++) {
                 const loc = locations[i];
-                // 檢查點擊是否落在熱區內
-                if (mouseX >= loc.x && mouseX <= loc.x + loc.width &&
-                    mouseY >= loc.y && mouseY <= loc.y + loc.height) {
+                if (mousePos.x >= loc.x && mousePos.x <= loc.x + loc.width &&
+                    mousePos.y >= loc.y && mousePos.y <= loc.y + loc.height) {
                     GameEventEmitter.emit('mapLocationClicked', loc.name);
-                    return; // 找到一個就跳出
+                    return;
                 }
             }
         }
 
-        // --- 畫面載入函數 ---
-        function loadVillageMap() {
-            // 清空主畫面，並添加 Canvas 元素
-            mainScreen.innerHTML = '<canvas id="game-canvas"></canvas>';
-            canvas = document.getElementById('game-canvas');
-            ctx = canvas.getContext('2d');
+        function handleMouseMove(event) {
+            const mousePos = getMousePos(canvas, event);
+            let foundLocation = null;
+            for (let i = 0; i < locations.length; i++) {
+                const loc = locations[i];
+                if (mousePos.x >= loc.x && mousePos.x <= loc.x + loc.width &&
+                    mousePos.y >= loc.y && mousePos.y <= loc.y + loc.height) {
+                    foundLocation = loc;
+                    break;
+                }
+            }
 
-            // 設置 Canvas 尺寸，使其填滿父容器 (main-screen)
-            // 這裡設定固定尺寸以簡化繪圖座標，實際應用可能需要根據 mainScreen 尺寸動態調整
-            canvas.width = mapWidth;
-            canvas.height = mapHeight;
+            if (foundLocation !== hoverLocation) {
+                hoverLocation = foundLocation;
+                if (hoverLocation) {
+                    canvas.style.cursor = 'pointer'; // 鼠標變為手型
+                } else {
+                    canvas.style.cursor = 'default'; // 恢復默認鼠標
+                }
+                drawVillageMapCanvas(); // 重新繪製以更新懸停效果
+            }
+        }
 
-            // 繪製地圖
+        // --- 動畫循環 ---
+        let lastFrameTime = 0;
+        let animationFrameId;
+
+        function animate(currentTime) {
+            const deltaTime = currentTime - lastFrameTime;
+            lastFrameTime = currentTime;
+
+            // 更新螢火蟲位置
+            fireflies.forEach(f => f.update());
+
+            // 重新繪製地圖 (包含懸停效果和粒子)
             drawVillageMapCanvas();
+            fireflies.forEach(f => f.draw()); // 繪製螢火蟲在最上層
 
-            // 為 Canvas 添加點擊事件監聽器
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // --- 畫面載入函數 ---
+        function resizeCanvas() {
+            // 將 Canvas 實際寬高設定為其父容器 (mainScreen) 的尺寸
+            const rect = mainScreen.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            // 計算縮放比例，以確保繪圖內容在不同尺寸下能正確縮放
+            scaleFactor = Math.min(canvas.width / BASE_MAP_WIDTH, canvas.height / BASE_MAP_HEIGHT);
+            
+            drawVillageMapCanvas(); // 重新繪製
+        }
+
+        function loadVillageMap() {
+            // 確保 Canvas 元素存在且可見
+            mainScreen.innerHTML = ''; // 清空可能存在的其他內容
+            mainScreen.appendChild(canvas);
+
+            resizeCanvas(); // 首次載入時調整 Canvas 尺寸並繪圖
+            window.addEventListener('resize', resizeCanvas); // 窗口大小變化時重新繪圖
+
             canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('mousemove', handleMouseMove);
 
-            addMessage('你進入了陽光普照的波兔村。', 'system');
+            // 啟動動畫循環
+            if (!animationFrameId) {
+                lastFrameTime = performance.now(); // 初始化時間
+                animationFrameId = requestAnimationFrame(animate);
+            }
+
+            addMessage('你進入了陽光普照、充滿活力的波兔村莊。', 'system');
             GameEventEmitter.emit('screenChanged', 'VillageMap');
         }
 
         function unloadCanvas() {
             if (canvas) {
+                cancelAnimationFrame(animationFrameId); // 停止動畫循環
+                animationFrameId = null;
+                window.removeEventListener('resize', resizeCanvas);
                 canvas.removeEventListener('click', handleCanvasClick);
-                canvas.parentNode.removeChild(canvas); // 移除 Canvas 元素
-                canvas = null;
-                ctx = null;
-                locations = []; // 清空熱區數據
+                canvas.removeEventListener('mousemove', handleMouseMove);
+                // 不再從 DOM 中移除 Canvas，而是將其隱藏或重置，以便重用
+                // 這裡我們只是清空父容器，下次載入時會重新 append
             }
         }
 
-        // 通用畫面切換 (在切換到這些畫面時，需要移除 Canvas 和其事件)
+        // 通用畫面切換 (在切換到這些畫面時，需要移除 Canvas 的事件和動畫)
         function loadGenericScreen(title, content) {
-            unloadCanvas(); // 切換到非地圖畫面時移除 Canvas
+            unloadCanvas(); // 切換到非地圖畫面時停止 Canvas 動畫和事件
             mainScreen.innerHTML = `
                 <div class="generic-screen">
                     <h3>${title}</h3>
@@ -481,7 +689,7 @@
         function loadInventoryScreen() {
             loadGenericScreen(
                 '我的物品',
-                '你目前沒有任何物品。(背包空空如也)<br>未來你可以在這裡整理裝備、使用道具。'
+                '你擁有一個小巧的背包，裡面裝著冒險的必需品。<br>目前：空空如也。'
             );
             addMessage('你打開了物品清單。', 'system');
             GameEventEmitter.emit('screenChanged', 'Inventory');
@@ -490,7 +698,7 @@
         function loadSkillsScreen() {
             loadGenericScreen(
                 '學習技能',
-                '你還沒有學習任何技能。(前往訓練師學習吧)<br>未來這裡會顯示你學到的技能和技能點數。'
+                '你的技能樹尚未點亮。<br>前往訓練場，向智者學習強大的技能吧！'
             );
             addMessage('你查看了技能。', 'system');
             GameEventEmitter.emit('screenChanged', 'Skills');
@@ -499,7 +707,7 @@
         function loadStatusScreen() {
             loadGenericScreen(
                 '角色狀態',
-                `名稱：冒險者<br>等級：1<br>生命值：100/100<br>金幣：50<br>經驗值：0/100`
+                `<b>名稱：</b>勇敢的冒險者<br><b>等級：</b>1 (新手)<br><b>生命值：</b>100/100 (健康)<br><b>魔法值：</b>50/50 (充沛)<br><b>金幣：</b>50 (夠買幾個蘿蔔)<br><b>經驗值：</b>0/100 (努力中...)`
             );
             addMessage('你查看了你的角色狀態。', 'system');
             GameEventEmitter.emit('screenChanged', 'Status');
@@ -535,7 +743,7 @@
             });
 
             document.getElementById('btn-save').addEventListener('click', () => {
-                addMessage('遊戲已儲存！(實際儲存功能待開發)', 'system');
+                addMessage('遊戲進度已儲存！(實際儲存功能待開發)', 'system');
             });
         }
 
@@ -545,25 +753,31 @@
             addMessage(`你來到了「${locationName}」。`, 'event');
             switch (locationName) {
                 case '波兔雜貨店':
-                    addMessage('雜貨店老闆胖波說：「歡迎光臨！想買些什麼呢？」', 'dialog');
+                    addMessage('雜貨店老闆胖波熱情地說：「歡迎光臨！今天有新鮮的蘿蔔哦！」', 'dialog');
+                    // TODO: 載入商店介面
                     break;
                 case '熊大鐵匠鋪':
-                    addMessage('鐵匠熊大正在叮叮噹噹地敲打著什麼。', 'dialog');
+                    addMessage('鐵匠熊大揮舞著大錘，火花四濺：「需要打造什麼嗎，年輕的冒險者？」', 'dialog');
+                    // TODO: 載入鐵匠鋪介面
                     break;
                 case '南瓜森林入口':
-                    addMessage('森林深處傳來未知生物的聲音，你準備好前往冒險了嗎？', 'dialog');
+                    addMessage('森林深處傳來陣陣沙沙聲，似乎有未知的挑戰等待著你。', 'dialog');
+                    // TODO: 載入探索或戰鬥畫面
                     break;
                 case '我的小屋':
-                    addMessage('這是你溫馨的小屋，讓你感到放鬆。', 'dialog');
+                    addMessage('這是你溫馨的小屋，讓你感到放鬆，疲勞似乎也減輕了。', 'dialog');
+                    // TODO: 休息/回復介面
                     break;
                 case '村長市政廳':
-                    addMessage('村長正在市政廳裡等待著，似乎有新任務。', 'dialog');
+                    addMessage('村長正在市政廳的辦公室裡處理公務，他似乎看到你進來了。', 'dialog');
+                    // TODO: 任務介面
                     break;
                 case '胖波農場':
-                    addMessage('胖波正在農場裡辛勤地種植蘿蔔。', 'dialog');
+                    addMessage('胖波正在農場裡辛勤地澆灌蘿蔔，空氣中瀰漫著泥土的清香。', 'dialog');
+                    // TODO: 農場互動或小遊戲
                     break;
                 case '廣場':
-                    addMessage('村莊廣場上陽光普照，孩子們正在嬉戲。', 'dialog');
+                    addMessage('村莊廣場上陽光普照，孩子們正在嬉戲，你感到一陣輕鬆。', 'dialog');
                     break;
                 default:
                     break;
