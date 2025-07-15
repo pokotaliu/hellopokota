@@ -319,6 +319,9 @@ class Game {
             return;
         }
 
+        // 儲存自動戰鬥模式的舊狀態，以便偵測變化
+        const wasAutoCombatMode = this.activePlayer.isAutoCombatMode;
+
         // 更新活躍玩家的動畫和移動
         this.activePlayer.updateAnimation();
         this.physicsEngine.updateCharacterMovement(this.activePlayer);
@@ -329,13 +332,7 @@ class Game {
             if (this.activePlayer.type === 'pokota') {
                 this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), this.playerAttack.bind(this), currentTime);
             } else if (this.activePlayer.type === 'brownBear') {
-                // 修正：確保為熊大 autoCombat 傳入 isWalkableFn
                 this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), currentTime);
-            }
-
-            // 如果自動戰鬥模式因沒有敵人而關閉，重新啟用手動控制 (僅胖波會關閉，熊大不會)
-            if (this.activePlayer.type === 'pokota' && !this.activePlayer.isAutoCombatMode) {
-                this._toggleManualControls(true);
             }
         } else {
             // 手動模式下，如果仍有敵人且在攻擊間隔內，自動攻擊最近的敵人
@@ -369,6 +366,16 @@ class Game {
                 }
             }
         }
+
+        // 檢查自動戰鬥模式是否剛剛被角色本身關閉
+        if (wasAutoCombatMode && !this.activePlayer.isAutoCombatMode) {
+            // 只有當前地圖不是怪物區域時才重新啟用手動控制
+            if (this.currentMapId !== 'monster_zone') {
+                this._toggleManualControls(true);
+                console.log("DEBUG: Active player exited auto-combat mode. Manual controls re-enabled.");
+            }
+        }
+
 
         // 更新敵人 AI 和移動
         for (let i = this.enemies.length - 1; i >= 0; i--) {
