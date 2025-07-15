@@ -12,6 +12,7 @@ import { Projectile } from './projectile.js';
 import { PhysicsEngine } from './physicsEngine.js';
 import { Map } from './map.js';
 import { Renderer } from './renderer.js';
+import { BrownBearCharacter } from './brownBearCharacter.js'; // 匯入熊大角色
 
 class Game {
     constructor(canvasId, constants, mapsData) {
@@ -26,14 +27,33 @@ class Game {
 
         this.currentMapId = 'village';
         this.currentMap = null;
-        this.player = null;
         this.enemies = [];
         this.projectiles = [];
 
         this.colors = {}; // 儲存所有顏色值
         this._initializeColors();
 
-        // 確保 Renderer 在這裡被正確實例化
+        // 初始化兩個玩家角色實例
+        this.pokota = new PlayerCharacter(
+            this.mapsData[this.currentMapId].initialPokotaX,
+            this.mapsData[this.currentMapId].initialPokotaY,
+            this.constants.POKOTA_MAX_HP,
+            this.constants.POKOTA_MOVE_SPEED_PX,
+            this.tileSize
+        );
+        this.pokota.type = 'pokota'; // 設置角色類型
+
+        this.brownBear = new BrownBearCharacter(
+            this.mapsData[this.currentMapId].initialPokotaX, // 初始位置與胖波相同
+            this.mapsData[this.currentMapId].initialPokotaY,
+            this.constants.BROWN_BEAR_MAX_HP,
+            this.constants.BROWN_BEAR_MOVE_SPEED_PX,
+            this.tileSize
+        );
+        this.brownBear.type = 'brownBear'; // 設置角色類型
+
+        this.activePlayer = this.pokota; // 預設活躍角色為胖波
+
         this.renderer = new Renderer(this.canvas, this.ctx, this.tileSize, this.colors);
         this.physicsEngine = new PhysicsEngine(this.tileSize);
 
@@ -41,6 +61,7 @@ class Game {
         this.autoCombatStatusDisplay = document.getElementById('autoCombatStatus');
         this.gameOverOverlay = document.getElementById('gameOverOverlay');
         this.restartButton = document.getElementById('restartButton');
+        this.switchCharacterButton = document.getElementById('switchCharacterBtn'); // 新增切換角色按鈕的引用
 
         this.lastGameUpdateTime = 0; // 用於控制遊戲邏輯更新頻率
     }
@@ -70,7 +91,14 @@ class Game {
             zombieEye: getComputedStyle(document.documentElement).getPropertyValue('--zombie-eye-color'),
             rockColor: getComputedStyle(document.documentElement).getPropertyValue('--rock-color'),
             skullColor: getComputedStyle(document.documentElement).getPropertyValue('--skull-color'),
-            portalColor: getComputedStyle(document.documentElement).getPropertyValue('--portal-color')
+            portalColor: getComputedStyle(document.documentElement).getPropertyValue('--portal-color'),
+            // 新增熊大的顏色
+            brownBearBody: '#8B4513', // 棕色
+            brownBearSnout: '#D2B48C', // 米色
+            brownBearNose: '#333333', // 深色鼻子
+            brownBearEye: '#000000', // 黑色眼睛
+            brownBearInnerEar: '#A0522D', // 稍淺的棕色內耳
+            brownBearClub: '#5A2D0C' // 棍棒顏色
         };
         this._updateGrassShades(this.mapsData[this.currentMapId].colors.grassBase);
     }
@@ -99,14 +127,8 @@ class Game {
      * 初始化遊戲狀態
      */
     init() {
-        this.player = new PlayerCharacter(
-            this.mapsData[this.currentMapId].initialPokotaX,
-            this.mapsData[this.currentMapId].initialPokotaY,
-            this.constants.POKOTA_MAX_HP,
-            this.constants.POKOTA_MOVE_SPEED_PX,
-            this.tileSize
-        );
-        this.loadMap(this.currentMapId); // 初始載入地圖
+        // 載入初始地圖，並將活躍角色移動到地圖初始位置
+        this.loadMap(this.currentMapId);
         this._setupEventListeners();
         requestAnimationFrame(this.gameLoop.bind(this));
     }
@@ -120,13 +142,22 @@ class Game {
         const mapData = this.mapsData[mapId];
         this.currentMap = new Map(mapData, this.tileSize);
 
-        // 更新胖波在新地圖的初始位置
-        this.player.x = mapData.initialPokotaX;
-        this.player.y = mapData.initialPokotaY;
-        this.player.pxX = this.player.x * this.tileSize;
-        this.player.pxY = this.player.y * this.tileSize;
-        this.player.targetX = this.player.x;
-        this.player.targetY = this.player.y;
+        // 將所有玩家角色移動到新地圖的初始位置
+        this.pokota.x = mapData.initialPokotaX;
+        this.pokota.y = mapData.initialPokotaY;
+        this.pokota.pxX = this.pokota.x * this.tileSize;
+        this.pokota.pxY = this.pokota.y * this.tileSize;
+        this.pokota.targetX = this.pokota.x;
+        this.pokota.targetY = this.pokota.y;
+        this.pokota.isMoving = false; // 停止移動
+
+        this.brownBear.x = mapData.initialPokotaX;
+        this.brownBear.y = mapData.initialPokotaY;
+        this.brownBear.pxX = this.brownBear.x * this.tileSize;
+        this.brownBear.pxY = this.brownBear.y * this.tileSize;
+        this.brownBear.targetX = this.brownBear.x;
+        this.brownBear.targetY = this.brownBear.y;
+        this.brownBear.isMoving = false; // 停止移動
 
         this.enemies = [];
         this.projectiles = [];
@@ -141,14 +172,16 @@ class Game {
 
         // 如果是怪物地圖，啟用自動戰鬥模式並生成初始怪物
         if (mapId === 'monster_zone') {
-            this.player.isAutoCombatMode = true;
+            this.pokota.isAutoCombatMode = true; // 胖波啟用自動戰鬥
+            this.brownBear.isAutoCombatMode = true; // 熊大啟用自動戰鬥
             mapData.initialMonsters.forEach(monster => {
                 this.enemies.push(new EnemyCharacter(monster.x, monster.y, monster.hp, monster.speed, this.tileSize));
             });
-            this._toggleManualControls(false);
+            this._toggleManualControls(false); // 自動戰鬥模式下禁用手動控制
         } else {
-            this.player.isAutoCombatMode = false;
-            this._toggleManualControls(true);
+            this.pokota.isAutoCombatMode = false; // 胖波禁用自動戰鬥
+            this.brownBear.isAutoCombatMode = false; // 熊大禁用自動戰鬥
+            this._toggleManualControls(true); // 手動模式下啟用手動控制
         }
         console.log(`載入地圖: ${mapId}`);
     }
@@ -165,28 +198,34 @@ class Game {
     }
 
     /**
-     * 發射蘿蔔飛彈
+     * 玩家攻擊邏輯 (根據當前角色類型調用不同攻擊方式)
      * @param {EnemyCharacter} targetEnemy - 目標敵人
      */
-    shootCarrot(targetEnemy) {
-        if (this.player.hp <= 0) return;
+    playerAttack(targetEnemy) {
+        if (this.activePlayer.hp <= 0) return;
 
-        const startX = this.player.pxX + this.tileSize / 2;
-        const startY = this.player.pxY + this.tileSize / 2;
-        const targetX = targetEnemy.pxX + this.tileSize / 2;
-        const targetY = targetEnemy.pxY + this.tileSize / 2;
+        if (this.activePlayer.type === 'pokota') {
+            // 胖波的遠程攻擊
+            const startX = this.activePlayer.pxX + this.tileSize / 2;
+            const startY = this.activePlayer.pxY + this.tileSize / 2;
+            const targetX = targetEnemy.pxX + this.tileSize / 2;
+            const targetY = targetEnemy.pxY + this.tileSize / 2;
 
-        this.projectiles.push(new Projectile(
-            startX, startY, targetX, targetY, 50, this.constants.PROJECTILE_SPEED, this.tileSize
-        ));
-        console.log("發射蘿蔔飛彈！");
+            this.projectiles.push(new Projectile(
+                startX, startY, targetX, targetY, 50, this.constants.PROJECTILE_SPEED, this.tileSize
+            ));
+            console.log("胖波發射蘿蔔飛彈！");
+        } else if (this.activePlayer.type === 'brownBear') {
+            // 熊大的近戰攻擊
+            this.activePlayer.meleeAttack(targetEnemy);
+        }
     }
 
     /**
      * 隨機生成僵屍 (僅限村莊地圖)
      */
     spawnZombie() {
-        if (this.player.hp <= 0 || this.currentMapId !== 'village') return;
+        if (this.activePlayer.hp <= 0 || this.currentMapId !== 'village') return;
 
         const spawnPoints = this.currentMap.getSpawnPoints();
         if (spawnPoints.length === 0) {
@@ -197,10 +236,10 @@ class Game {
         const spawnPoint = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
 
         const dist = Math.sqrt(
-            Math.pow(spawnPoint.x - this.player.x, 2) +
-            Math.pow(spawnPoint.y - this.player.y, 2)
+            Math.pow(spawnPoint.x - this.activePlayer.x, 2) +
+            Math.pow(spawnPoint.y - this.activePlayer.y, 2)
         );
-        if (dist < 3) { // 確保距離胖波至少三格以上
+        if (dist < 3) { // 確保距離活躍角色至少三格以上
             return;
         }
 
@@ -209,56 +248,118 @@ class Game {
     }
 
     /**
+     * 切換當前活躍的角色
+     */
+    switchCharacter() {
+        // 記錄當前活躍角色的位置和血量
+        const currentX = this.activePlayer.x;
+        const currentY = this.activePlayer.y;
+        const currentPxX = this.activePlayer.pxX;
+        const currentPxY = this.activePlayer.pxY;
+        const currentTargetX = this.activePlayer.targetX;
+        const currentTargetY = this.activePlayer.targetY;
+        const currentHP = this.activePlayer.hp;
+        const currentIsAutoCombatMode = this.activePlayer.isAutoCombatMode;
+
+        if (this.activePlayer === this.pokota) {
+            this.activePlayer = this.brownBear;
+            this.pokota.hp = currentHP; // 保存胖波的血量
+            this.pokota.isAutoCombatMode = currentIsAutoCombatMode; // 保存胖波的自動戰鬥模式
+            console.log("切換到熊大！");
+        } else {
+            this.activePlayer = this.pokota;
+            this.brownBear.hp = currentHP; // 保存熊大的血量
+            this.brownBear.isAutoCombatMode = currentIsAutoCombatMode; // 保存熊大的自動戰鬥模式
+            console.log("切換到胖波！");
+        }
+
+        // 將新活躍角色的位置設定為前一個角色的位置
+        this.activePlayer.x = currentX;
+        this.activePlayer.y = currentY;
+        this.activePlayer.pxX = currentPxX;
+        this.activePlayer.pxY = currentPxY;
+        this.activePlayer.targetX = currentTargetX;
+        this.activePlayer.targetY = currentTargetY;
+        this.activePlayer.isMoving = false; // 停止移動
+        this.activePlayer.hp = currentHP; // 恢復血量
+        this.activePlayer.isAutoCombatMode = currentIsAutoCombatMode; // 恢復自動戰鬥模式
+
+        // 如果在怪物區域，強制啟用自動戰鬥
+        if (this.currentMapId === 'monster_zone') {
+            this.activePlayer.isAutoCombatMode = true;
+            this._toggleManualControls(false);
+        } else {
+            this._toggleManualControls(true);
+        }
+    }
+
+    /**
      * 遊戲邏輯更新
      * @param {number} currentTime - 當前時間戳
      */
     update(currentTime) {
-        if (this.player.hp <= 0) {
+        if (this.activePlayer.hp <= 0) {
             this.gameOverOverlay.style.display = 'flex';
             return;
         }
 
-        // 更新玩家動畫和移動
-        this.player.updateAnimation();
-        this.physicsEngine.updateCharacterMovement(this.player);
+        // 更新活躍玩家的動畫和移動
+        this.activePlayer.updateAnimation();
+        this.physicsEngine.updateCharacterMovement(this.activePlayer);
 
         // 自動戰鬥模式邏輯
-        if (this.player.isAutoCombatMode) {
-            this.player.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), this.shootCarrot.bind(this), currentTime);
-            // 如果自動戰鬥模式因沒有敵人而關閉，重新啟用手動控制
-            if (!this.player.isAutoCombatMode) {
+        if (this.activePlayer.isAutoCombatMode) {
+            // 根據角色類型調用不同的 autoCombat 方法
+            if (this.activePlayer.type === 'pokota') {
+                this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), this.playerAttack.bind(this), currentTime);
+            } else if (this.activePlayer.type === 'brownBear') {
+                this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), currentTime); // 熊大 autoCombat 不需傳入 attackFn
+            }
+
+            // 如果自動戰鬥模式因沒有敵人而關閉，重新啟用手動控制 (僅胖波會關閉，熊大不會)
+            if (this.activePlayer.type === 'pokota' && !this.activePlayer.isAutoCombatMode) {
                 this._toggleManualControls(true);
             }
         } else {
             // 手動模式下，如果仍有敵人且在攻擊間隔內，自動攻擊最近的敵人
-            if (this.enemies.length > 0 && currentTime - this.player.lastAttackTime > this.constants.ATTACK_INTERVAL) {
+            let attackRange = 0;
+            let attackCooldown = 0;
+            if (this.activePlayer.type === 'pokota') {
+                attackRange = this.constants.ZOMBIE_ATTACK_RANGE_TILES; // 胖波的攻擊範圍
+                attackCooldown = this.constants.ATTACK_INTERVAL; // 胖波的攻擊冷卻
+            } else if (this.activePlayer.type === 'brownBear') {
+                attackRange = this.constants.BROWN_BEAR_ATTACK_RANGE_TILES; // 熊大的攻擊範圍
+                attackCooldown = this.constants.BROWN_BEAR_ATTACK_COOLDOWN; // 熊大的攻擊冷卻
+            }
+
+            if (this.enemies.length > 0 && currentTime - this.activePlayer.lastAttackTime > attackCooldown) {
                 let closestEnemy = null;
                 let minDistance = Infinity;
                 this.enemies.forEach(zombie => {
                     const dist = Math.sqrt(
-                        Math.pow(zombie.x - this.player.x, 2) +
-                        Math.pow(zombie.y - this.player.y, 2)
+                        Math.pow(zombie.x - this.activePlayer.x, 2) +
+                        Math.pow(zombie.y - this.activePlayer.y, 2)
                     );
-                    if (dist <= this.constants.ZOMBIE_ATTACK_RANGE_TILES && dist < minDistance) {
+                    if (dist <= attackRange && dist < minDistance) {
                         minDistance = dist;
                         closestEnemy = zombie;
                     }
                 });
                 if (closestEnemy) {
-                    this.shootCarrot(closestEnemy);
-                    this.player.lastAttackTime = currentTime;
+                    this.playerAttack(closestEnemy); // 調用通用的 playerAttack
+                    this.activePlayer.lastAttackTime = currentTime;
                 }
             }
         }
 
         // 更新敵人 AI 和移動
         this.enemies.forEach(enemy => {
-            enemy.updateAI(this.player);
-            // 僵屍對胖波造成傷害
+            enemy.updateAI(this.activePlayer); // 敵人追蹤活躍玩家
+            // 僵屍對活躍玩家造成傷害
             const zombieCenterX = enemy.pxX + this.tileSize / 2;
             const zombieCenterY = enemy.pxY + this.tileSize / 2;
-            const playerCenterX = this.player.pxX + this.tileSize / 2;
-            const playerCenterY = this.player.pxY + this.tileSize / 2;
+            const playerCenterX = this.activePlayer.pxX + this.tileSize / 2;
+            const playerCenterY = this.activePlayer.pxY + this.tileSize / 2;
 
             const distPxToPlayer = Math.sqrt(
                 Math.pow(zombieCenterX - playerCenterX, 2) +
@@ -266,13 +367,13 @@ class Game {
             );
 
             if (distPxToPlayer < this.constants.ZOMBIE_ATTACK_RANGE_PX && currentTime - enemy.lastAttackTime > this.constants.ZOMBIE_ATTACK_COOLDOWN) {
-                this.player.takeDamage(this.constants.ZOMBIE_MELEE_DAMAGE);
+                this.activePlayer.takeDamage(this.constants.ZOMBIE_MELEE_DAMAGE);
                 enemy.lastAttackTime = currentTime;
-                console.log(`胖波受到傷害！HP: ${this.player.hp}`);
+                console.log(`${this.activePlayer.type === 'pokota' ? '胖波' : '熊大'}受到傷害！HP: ${this.activePlayer.hp}`);
             }
         });
 
-        // 更新投射物位置和碰撞
+        // 更新投射物位置和碰撞 (僅胖波會發射投射物)
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const p = this.projectiles[i];
             if (p.update()) { // 如果投射物到達目標
@@ -307,8 +408,8 @@ class Game {
         // 檢查傳送門進入
         const portal = this.currentMap.portal;
         if (portal &&
-            this.player.x === portal.x &&
-            this.player.y === portal.y) {
+            this.activePlayer.x === portal.x &&
+            this.activePlayer.y === portal.y) {
             console.log(`進入傳送門，傳送到 ${portal.targetMap}`);
             this.loadMap(portal.targetMap);
         }
@@ -318,18 +419,17 @@ class Game {
      * 遊戲渲染
      */
     render() {
-        // 這裡調用 Renderer 實例的 render 方法
-        this.renderer.render(this.currentMap, this.player, this.enemies, this.projectiles);
+        this.renderer.render(this.currentMap, this.activePlayer, this.enemies, this.projectiles);
 
         // 更新 UI 顯示
-        this.pokotaHPDisplay.textContent = this.player.hp;
-        this.pokotaHPDisplay.style.color = this.player.hp > this.constants.POKOTA_MAX_HP / 2 ? 'green' : (this.player.hp > this.constants.POKOTA_MAX_HP / 4 ? 'orange' : 'red');
+        this.pokotaHPDisplay.textContent = `${this.activePlayer.hp} / ${this.activePlayer.maxHp}`;
+        this.pokotaHPDisplay.style.color = this.activePlayer.hp > this.activePlayer.maxHp / 2 ? 'green' : (this.activePlayer.hp > this.activePlayer.maxHp / 4 ? 'orange' : 'red');
 
-        if (this.player.isAutoCombatMode) {
-            this.autoCombatStatusDisplay.textContent = "模式: 自動戰鬥中";
+        if (this.activePlayer.isAutoCombatMode) {
+            this.autoCombatStatusDisplay.textContent = `模式: 自動戰鬥中 (${this.activePlayer.type === 'pokota' ? '胖波' : '熊大'})`;
             this.autoCombatStatusDisplay.style.color = '#4CAF50';
         } else {
-            this.autoCombatStatusDisplay.textContent = "模式: 手動探索";
+            this.autoCombatStatusDisplay.textContent = `模式: 手動探索 (${this.activePlayer.type === 'pokota' ? '胖波' : '熊大'})`;
             this.autoCombatStatusDisplay.style.color = '#d85785';
         }
     }
@@ -356,42 +456,61 @@ class Game {
      * 設定事件監聽器
      */
     _setupEventListeners() {
-        document.getElementById('moveUpBtn').addEventListener('click', () => this.player.move('up', this.currentMap.isWalkable.bind(this.currentMap)));
-        document.getElementById('moveLeftBtn').addEventListener('click', () => this.player.move('left', this.currentMap.isWalkable.bind(this.currentMap)));
-        document.getElementById('moveRightBtn').addEventListener('click', () => this.player.move('right', this.currentMap.isWalkable.bind(this.currentMap)));
-        document.getElementById('moveDownBtn').addEventListener('click', () => this.player.move('down', this.currentMap.isWalkable.bind(this.currentMap)));
+        // 移動按鈕事件
+        document.getElementById('moveUpBtn').addEventListener('click', () => this.activePlayer.move('up', this.currentMap.isWalkable.bind(this.currentMap)));
+        document.getElementById('moveLeftBtn').addEventListener('click', () => this.activePlayer.move('left', this.currentMap.isWalkable.bind(this.currentMap)));
+        document.getElementById('moveRightBtn').addEventListener('click', () => this.activePlayer.move('right', this.currentMap.isWalkable.bind(this.currentMap)));
+        document.getElementById('moveDownBtn').addEventListener('click', () => this.activePlayer.move('down', this.currentMap.isWalkable.bind(this.currentMap)));
+        
+        // 生成僵屍按鈕
         document.getElementById('spawnZombieBtn').addEventListener('click', () => this.spawnZombie());
 
+        // 切換角色按鈕
+        this.switchCharacterButton.addEventListener('click', () => this.switchCharacter());
+
+        // 鍵盤事件
         document.addEventListener('keydown', (event) => {
-            if (this.player.hp <= 0) return;
+            if (this.activePlayer.hp <= 0) return;
 
             switch (event.key) {
                 case 'ArrowUp':
-                    this.player.move('up', this.currentMap.isWalkable.bind(this.currentMap));
+                    this.activePlayer.move('up', this.currentMap.isWalkable.bind(this.currentMap));
                     break;
                 case 'ArrowDown':
-                    this.player.move('down', this.currentMap.isWalkable.bind(this.currentMap));
+                    this.activePlayer.move('down', this.currentMap.isWalkable.bind(this.currentMap));
                     break;
                 case 'ArrowLeft':
-                    this.player.move('left', this.currentMap.isWalkable.bind(this.currentMap));
+                    this.activePlayer.move('left', this.currentMap.isWalkable.bind(this.currentMap));
                     break;
                 case 'ArrowRight':
-                    this.player.move('right', this.currentMap.isWalkable.bind(this.currentMap));
+                    this.activePlayer.move('right', this.currentMap.isWalkable.bind(this.currentMap));
                     break;
                 case 'z':
                 case 'Z':
                     this.spawnZombie();
                     break;
+                case 'c': // 'c' 鍵用於切換角色
+                case 'C':
+                    this.switchCharacter();
+                    break;
             }
         });
 
+        // 重新開始按鈕
         this.restartButton.addEventListener('click', () => {
-            this.player.hp = this.constants.POKOTA_MAX_HP;
-            this.player.isAutoCombatMode = false; // 重置自動戰鬥模式
+            this.activePlayer.hp = this.constants.POKOTA_MAX_HP; // 重置為胖波的滿血，因為胖波是預設角色
+            this.pokota.hp = this.constants.POKOTA_MAX_HP;
+            this.brownBear.hp = this.constants.BROWN_BEAR_MAX_HP;
+
+            this.pokota.isAutoCombatMode = false; // 重置自動戰鬥模式
+            this.brownBear.isAutoCombatMode = false;
+
             this.gameOverOverlay.style.display = 'none';
             this.loadMap('village'); // 回到村莊地圖重新開始
+            this.activePlayer = this.pokota; // 確保重置後是胖波
+
             // 重新啟動遊戲循環 (如果已經停止)
-            if (this.player.hp > 0 && this.gameOverOverlay.style.display === 'none') {
+            if (this.activePlayer.hp > 0 && this.gameOverOverlay.style.display === 'none') {
                  requestAnimationFrame(this.gameLoop.bind(this));
             }
         });
