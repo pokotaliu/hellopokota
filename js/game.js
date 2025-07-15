@@ -323,7 +323,7 @@ class Game {
             if (this.activePlayer.type === 'pokota') {
                 this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), this.playerAttack.bind(this), currentTime);
             } else if (this.activePlayer.type === 'brownBear') {
-                this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), currentTime); // 熊大 autoCombat 不需傳入 attackFn
+                this.activePlayer.autoCombat(this.enemies, this.currentMap.isWalkable.bind(this.currentMap), this.currentMap.isWalkable.bind(this.currentMap), currentTime); // 熊大 autoCombat 需要 isWalkableFn
             }
 
             // 如果自動戰鬥模式因沒有敵人而關閉，重新啟用手動控制 (僅胖波會關閉，熊大不會)
