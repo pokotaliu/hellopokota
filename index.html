@@ -1,112 +1,484 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>波兔村聊天室</title>
-  <style>
-    body {
-      font-family: "微軟正黑體", sans-serif;
-      background: #f2f2f2;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>波兔村冒險：我的能力展示 (ASCII 地圖)</title>
+    <style>
+        /* 整體佈局 */
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            font-family: "微軟正黑體", Arial, sans-serif;
+            background-color: #e0f2f7;
+            overflow: hidden; /* 防止滾動條 */
+        }
+        #game-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            max-width: 1200px; /* 限制遊戲寬度 */
+            width: 100%;
+            margin: 0 auto; /* 居中顯示 */
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
 
-    #chatbox {
-      flex: 1;
-      padding: 10px;
-      overflow-y: auto;
-      background: #fff;
-      border-bottom: 1px solid #ccc;
-    }
+        /* 標題區塊 */
+        #game-header {
+            background-color: #4dd0e1;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
 
-    .message {
-      background: #e0f7fa;
-      margin: 6px 0;
-      padding: 8px 12px;
-      border-radius: 8px;
-      max-width: 80%;
-    }
+        /* 遊戲主內容區 */
+        #game-container {
+            display: flex;
+            flex: 1; /* 讓內容區塊佔滿可用空間 */
+            padding: 15px;
+            gap: 15px; /* 元素間距 */
+            overflow: hidden; /* 防止內部元素溢出 */
+        }
 
-    .system {
-      background: #fce4ec;
-      color: #880e4f;
-      font-style: italic;
-    }
+        /* 主畫面 */
+        #main-screen {
+            flex: 3; /* 主畫面佔大部分空間 */
+            background-color: #ffffff;
+            border: 1px solid #b2ebf2;
+            border-radius: 8px;
+            padding: 15px;
+            overflow: auto; /* 內容超出時可滾動 */
+            display: flex; /* 讓內部內容可以彈性佈局 */
+            justify-content: center; /* 內容水平置中 */
+            align-items: center; /* 內容垂直置中 */
+            font-size: 24px;
+            color: #555;
+            flex-direction: column; /* 允許垂直排列內容 */
+        }
 
-    #controls {
-      display: flex;
-      gap: 10px;
-      padding: 10px;
-      background: #fafafa;
-      border-top: 1px solid #ccc;
-    }
+        /* 訊息框 */
+        #message-box {
+            flex: 1; /* 訊息框佔剩餘空間 */
+            background-color: #e0f7fa;
+            border: 1px solid #b2ebf2;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* 訊息過多時可滾動 */
+            font-size: 0.9em;
+        }
+        .message {
+            background-color: #ffffff;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            word-wrap: break-word; /* 自動換行 */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .message.system {
+            background-color: #fce4ec;
+            color: #880e4f;
+            font-style: italic;
+            text-align: center;
+        }
+        .message.dialog {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .message.event {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
 
-    #controls button {
-      flex: 1;
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      background: #64b5f6;
-      color: white;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
+        /* 操作按鈕 */
+        #game-controls {
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+            gap: 10px;
+            background-color: #fafafa;
+            border-top: 1px solid #b2ebf2;
+            flex-wrap: wrap; /* 按鈕換行 */
+        }
+        .game-button {
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #00bcd4; /* 青色按鈕 */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            min-width: 120px; /* 最小寬度 */
+        }
+        .game-button:hover {
+            background-color: #00acc1;
+            transform: translateY(-2px);
+        }
+        .game-button:active {
+            transform: translateY(0);
+        }
 
-    #controls button:hover {
-      background: #42a5f5;
-    }
-  </style>
+        /* ASCII 地圖特定樣式 */
+        #ascii-map-container {
+            position: relative; /* 讓內部地點可以絕對定位 */
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace; /* 等寬字體確保ASCII排版 */
+            white-space: pre; /* 保留所有空白和換行 */
+            background-color: #f0f4c3; /* 淺黃綠色背景 */
+            color: #424242; /* 深灰色文字 */
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.2; /* 調整行高 */
+            font-size: 16px; /* 調整字體大小 */
+            width: 95%; /* 佔據容器大部分寬度 */
+            height: 95%; /* 佔據容器大部分高度 */
+            overflow: auto; /* 如果地圖太大可以滾動 */
+        }
+
+        /* 確保地圖內容顯示在容器中間 */
+        #main-screen.ascii-map-mode {
+            justify-content: flex-start; /* 讓內容靠上對齊，因為ASCII地圖通常是從左上角開始 */
+            align-items: flex-start;
+        }
+
+
+        .map-location {
+            position: absolute;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid transparent; /* 預設透明邊框 */
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            z-index: 10; /* 確保熱區在ASCII文字之上 */
+        }
+        .map-location:hover {
+            border-color: #ffeb3b; /* 滑鼠懸停時顯示黃色邊框 */
+            background-color: rgba(255, 255, 0, 0.1); /* 輕微背景色提示 */
+        }
+        .location-name {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0; /* 預設隱藏名稱 */
+            pointer-events: none; /* 讓名稱不會阻擋點擊事件 */
+            transition: opacity 0.2s ease;
+            position: absolute; /* 絕對定位在熱區內 */
+            bottom: 105%; /* 顯示在熱區上方 */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20; /* 確保名稱在熱區之上 */
+        }
+        .map-location:hover .location-name {
+            opacity: 1; /* 滑鼠懸停時顯示名稱 */
+        }
+
+        /* 通用畫面樣式 */
+        .generic-screen {
+            text-align: center;
+            padding: 20px;
+            color: #333;
+            max-width: 80%;
+        }
+        .generic-screen h3 {
+            font-size: 1.8em;
+            color: #00796b;
+            margin-bottom: 15px;
+        }
+        .generic-screen p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            #game-container {
+                flex-direction: column; /* 在小螢幕上垂直堆疊 */
+            }
+            #main-screen, #message-box {
+                flex: none; /* 取消flex佔比 */
+                height: 50vh; /* 設置固定高度 */
+            }
+            #main-screen {
+                min-height: 300px;
+            }
+            #message-box {
+                min-height: 200px;
+            }
+            #game-controls {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .game-button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div id="chatbox">
-  <div class="message system">🎉 歡迎來到波兔村聊天室！</div>
-</div>
+    <div id="game-wrapper">
+        <header id="game-header">
+            波兔村冒險
+        </header>
 
-<div id="controls">
-  <button onclick="sendMessage()">發送訊息</button>
-  <button onclick="randomMessage()">隨機訊息</button>
-  <button onclick="clearMessages()">清空訊息</button>
-</div>
+        <main id="game-container">
+            <div id="main-screen">
+                <h2>遊戲載入中...</h2>
+                <p>請稍候，波兔村的冒險即將開始！</p>
+            </div>
+            <div id="message-box">
+                <div class="message system">系統: 遊戲啟動中...</div>
+            </div>
+        </main>
 
-<script>
-  const chatbox = document.getElementById("chatbox");
+        <footer id="game-controls">
+            <button class="game-button" id="btn-explore">探索村莊</button>
+            <button class="game-button" id="btn-inventory">我的物品</button>
+            <button class="game-button" id="btn-skills">學習技能</button>
+            <button class="game-button" id="btn-status">角色狀態</button>
+            <button class="game-button" id="btn-save">儲存進度</button>
+        </footer>
+    </div>
 
-  function sendMessage() {
-    const msg = prompt("輸入訊息：");
-    if (msg) {
-      appendMessage("你說：「" + msg + "」");
-    }
-  }
+    <script>
+        // gameEvents.js 內容 (已整合到此檔案中)
+        const GameEventEmitter = {
+            events: {},
+            on: function(eventName, listener) {
+                if (!this.events[eventName]) { this.events[eventName] = []; }
+                this.events[eventName].push(listener);
+            },
+            emit: function(eventName, data) {
+                if (this.events[eventName]) {
+                    this.events[eventName].forEach(listener => { listener(data); });
+                }
+            },
+            off: function(eventName, listener) {
+                if (this.events[eventName]) {
+                    this.events[eventName] = this.events[eventName].filter(l => l !== listener);
+                }
+            }
+        };
 
-  function randomMessage() {
-    const messages = [
-      "胖波說：「蘿蔔最好吃！」",
-      "熊大：「我是國王，你們都要聽我的！」",
-      "白爛貓：「宇宙其實不在意你吃了幾根蘿蔔。」",
-      "瘦波靜靜地看著你，一言不發。",
-      "系統提示：你獲得了一根神聖的金蘿蔔。"
-    ];
-    const random = messages[Math.floor(Math.random() * messages.length)];
-    appendMessage(random);
-  }
+        // messageHandler.js 內容 (已整合到此檔案中)
+        const messageBox = document.getElementById('message-box');
+        function addMessage(text, type = 'system') {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            if (type) { messageElement.classList.add(type); }
+            messageElement.textContent = text;
+            messageBox.appendChild(messageElement);
+            messageBox.scrollTop = messageBox.scrollHeight;
+        }
 
-  function clearMessages() {
-    chatbox.innerHTML = '<div class="message system">🧹 已清空所有訊息。</div>';
-  }
+        // screenRenderer.js 內容 (已整合到此檔案中)
+        const mainScreen = document.getElementById('main-screen');
 
-  function appendMessage(text) {
-    const div = document.createElement("div");
-    div.className = "message";
-    div.textContent = text;
-    chatbox.appendChild(div);
-    chatbox.scrollTop = chatbox.scrollHeight;
-  }
-</script>
+        function loadVillageMap() {
+            // 添加一個類別，以便在CSS中調整主畫面的對齊方式
+            mainScreen.classList.add('ascii-map-mode');
+            mainScreen.innerHTML = `
+                <pre id="ascii-map-container">
+            _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+           |                                                               |
+           |        南瓜森林入口                                           |
+           |    🌲🌲🌲🌲🌲🌲🌲🌲                                         |
+           |    🌲           🌲                                          |
+           |    🌲           🌲                                          |
+           |    🌲   <M>     🌲           村長市政廳                       |
+           |    🌲🌲🌲🌲🌲🌲🌲🌲           [ ] [ ] [ ] [ ] [ ] [ ]       |
+           |                                   [ ] [ ] [ ] [ ] [ ] [ ]       |
+           |                                                               |
+           |                                                               |
+           |                                                               |
+           |                                                               |
+           |     波兔雜貨店                                  熊大鐵匠鋪      |
+           |     [__]                                        [_|_|]      |
+           |     /  \\                                       | | |       |
+           |    |    |                                       |_____|      |
+           |    |____|                                                    |
+           |                                                               |
+           |                                                               |
+           |                                                               |
+           |     我的小屋                                   胖波農場       |
+           |    /\\_/\                                        ---        |
+           |   ( ' ' )                                        | |        |
+           |    > ^ <                                        |___|       |
+           |                                                               |
+           |                                                               |
+           |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|
+                </pre>
+                <div class="map-location" id="loc-shop" data-name="波兔雜貨店"
+                     style="left: 10%; top: 46%; width: 15%; height: 12%;">
+                    <span class="location-name">波兔雜貨店</span>
+                </div>
+                <div class="map-location" id="loc-blacksmith" data-name="熊大鐵匠鋪"
+                     style="left: 65%; top: 46%; width: 15%; height: 12%;">
+                    <span class="location-name">熊大鐵匠鋪</span>
+                </div>
+                <div class="map-location" id="loc-townhall" data-name="村長市政廳"
+                     style="left: 45%; top: 30%; width: 20%; height: 15%;">
+                    <span class="location-name">村長市政廳</span>
+                </div>
+                <div class="map-location" id="loc-home" data-name="我的小屋"
+                     style="left: 18%; top: 72%; width: 15%; height: 12%;">
+                    <span class="location-name">我的小屋</span>
+                </div>
+                <div class="map-location" id="loc-forest" data-name="南瓜森林入口"
+                     style="left: 15%; top: 10%; width: 20%; height: 20%;">
+                    <span class="location-name">南瓜森林入口</span>
+                </div>
+                 <div class="map-location" id="loc-farm" data-name="胖波農場"
+                     style="left: 65%; top: 72%; width: 15%; height: 12%;">
+                    <span class="location-name">胖波農場</span>
+                </div>
+            `;
+
+            const locations = mainScreen.querySelectorAll('.map-location');
+            locations.forEach(locationDiv => {
+                locationDiv.addEventListener('click', () => {
+                    const locationName = locationDiv.dataset.name;
+                    GameEventEmitter.emit('mapLocationClicked', locationName);
+                });
+            });
+
+            addMessage('你進入了陽光普照的波兔村。', 'system');
+            GameEventEmitter.emit('screenChanged', 'VillageMap');
+        }
+
+        function loadInventoryScreen() {
+            mainScreen.classList.remove('ascii-map-mode'); // 移除地圖模式的對齊樣式
+            mainScreen.innerHTML = `
+                <div class="generic-screen">
+                    <h3>我的物品</h3>
+                    <p>你目前沒有任何物品。(背包空空如也)</p>
+                    <p>未來你可以在這裡整理裝備、使用道具。</p>
+                </div>
+            `;
+            addMessage('你打開了物品清單。', 'system');
+            GameEventEmitter.emit('screenChanged', 'Inventory');
+        }
+
+        function loadSkillsScreen() {
+            mainScreen.classList.remove('ascii-map-mode'); // 移除地圖模式的對齊樣式
+            mainScreen.innerHTML = `
+                <div class="generic-screen">
+                    <h3>學習技能</h3>
+                    <p>你還沒有學習任何技能。(前往訓練師學習吧)</p>
+                    <p>未來這裡會顯示你學到的技能和技能點數。</p>
+                </div>
+            `;
+            addMessage('你查看了技能。', 'system');
+            GameEventEmitter.emit('screenChanged', 'Skills');
+        }
+
+        function loadStatusScreen() {
+            mainScreen.classList.remove('ascii-map-mode'); // 移除地圖模式的對齊樣式
+            mainScreen.innerHTML = `
+                <div class="generic-screen">
+                    <h3>角色狀態</h3>
+                    <p>名稱：冒險者</p>
+                    <p>等級：1</p>
+                    <p>生命值：100/100</p>
+                    <p>金幣：50</p>
+                    <p>經驗值：0/100</p>
+                </div>
+            `;
+            addMessage('你查看了你的角色狀態。', 'system');
+            GameEventEmitter.emit('screenChanged', 'Status');
+        }
+
+        // gameLogic.js 內容 (已整合到此檔案中)
+        let currentScreen = 'villageMap';
+        let playerLocation = '村莊廣場';
+
+        function setupControls() {
+            document.getElementById('btn-explore').addEventListener('click', () => {
+                if (currentScreen !== 'villageMap') {
+                    loadVillageMap();
+                    currentScreen = 'villageMap';
+                } else {
+                    addMessage('你已經在地圖畫面了，可以點擊地圖上的地點。', 'system');
+                }
+            });
+
+            document.getElementById('btn-inventory').addEventListener('click', () => {
+                loadInventoryScreen();
+                currentScreen = 'inventory';
+            });
+
+            document.getElementById('btn-skills').addEventListener('click', () => {
+                loadSkillsScreen();
+                currentScreen = 'skills';
+            });
+
+            document.getElementById('btn-status').addEventListener('click', () => {
+                loadStatusScreen();
+                currentScreen = 'status';
+            });
+
+            document.getElementById('btn-save').addEventListener('click', () => {
+                addMessage('遊戲已儲存！(實際儲存功能待開發)', 'system');
+            });
+        }
+
+        // 監聽地圖地點點擊事件
+        GameEventEmitter.on('mapLocationClicked', (locationName) => {
+            playerLocation = locationName;
+            addMessage(`你來到了「${locationName}」。`, 'event');
+            switch (locationName) {
+                case '波兔雜貨店':
+                    addMessage('雜貨店老闆胖波說：「歡迎光臨！想買些什麼呢？」', 'dialog');
+                    // TODO: 載入商店介面
+                    break;
+                case '熊大鐵匠鋪':
+                    addMessage('鐵匠熊大正在叮叮噹噹地敲打著什麼。', 'dialog');
+                    // TODO: 載入鐵匠鋪介面
+                    break;
+                case '南瓜森林入口':
+                    addMessage('森林深處傳來未知生物的聲音，你準備好前往冒險了嗎？', 'dialog');
+                    // TODO: 載入探索或戰鬥畫面
+                    break;
+                case '我的小屋':
+                    addMessage('這是你溫馨的小屋，讓你感到放鬆。', 'dialog');
+                    // TODO: 休息/回復介面
+                    break;
+                case '村長市政廳':
+                    addMessage('村長正在市政廳裡等待著，似乎有新任務。', 'dialog');
+                    // TODO: 任務介面
+                    break;
+                case '胖波農場':
+                    addMessage('胖波正在農場裡辛勤地種植蘿蔔。', 'dialog');
+                    // TODO: 農場互動或小遊戲
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        // 監聽畫面切換事件
+        GameEventEmitter.on('screenChanged', (screenName) => {
+            console.log(`畫面已切換到：${screenName}`);
+        });
+
+        // init.js 內容 (已整合到此檔案中)
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVillageMap(); // 遊戲啟動時預設載入村莊地圖
+            setupControls(); // 設定按鈕事件
+        });
+    </script>
 
 </body>
 </html>
