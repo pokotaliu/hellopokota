@@ -7,21 +7,22 @@ import { GAME_CONSTANTS } from './constants.js';
 
 export class Character {
     constructor(x, y, hp, speed, tileSize) {
-        this.x = x; // 磁磚X座標
-        this.y = y; // 磁磚Y座標
-        this.pxX = x * tileSize; // 像素X座標
-        this.pxY = y * tileSize; // 像素Y座標
-        this.targetX = x; // 目標磁磚X座標
-        this.targetY = y; // 目標磁磚Y座標
+        this.x = x; // 磁磚X座標 (整數)
+        this.y = y; // 磁磚Y座標 (整數)
+        this.pxX = x * tileSize; // 像素X座標 (浮點數)
+        this.pxY = y * tileSize; // 像素Y座標 (浮點數)
+        this.targetX = x; // 目標磁磚X座標 (整數)
+        this.targetY = y; // 目標磁磚Y座標 (整數)
         this.hp = hp;
         this.maxHp = hp;
-        this.speedPx = speed; // 像素移動速度
+        this.speedPx = speed; // 像素移動速度 (每幀移動的像素量)
         this.isMoving = false;
-        this.animationFrame = 0;
-        this.animationTimer = 0;
+        this.animationFrame = 0; // 當前動畫幀
+        this.animationTimer = 0; // 用於控制動畫幀切換的計時器
         this.tileSize = tileSize; // 方便子類別繪製
 
         this.lastAttackTime = 0; // 上次攻擊時間
+        this.collisionRadius = tileSize * 0.2; // 預設碰撞半徑，子類別可覆寫
     }
 
     /**
@@ -30,14 +31,13 @@ export class Character {
     updateAnimation() {
         if (this.isMoving) {
             this.animationTimer++;
-            // 使用更通用的動畫幀持續時間，而不是寫死的 POKOTA_ANIM_FRAME_DURATION
-            // 每個角色可以有自己的動畫速度
-            if (this.animationTimer >= GAME_CONSTANTS.POKOTA_ANIM_FRAME_DURATION) { // 可以考慮讓 Character 有自己的 animFrameDuration 屬性
-                this.animationFrame = 1 - this.animationFrame;
+            // 每個角色可以有自己的動畫速度，這裡使用通用的常數
+            if (this.animationTimer >= GAME_CONSTANTS.POKOTA_ANIM_FRAME_DURATION) {
+                this.animationFrame = 1 - this.animationFrame; // 在 0 和 1 之間切換
                 this.animationTimer = 0;
             }
         } else {
-            this.animationFrame = 0;
+            this.animationFrame = 0; // 不移動時回到預設幀
             this.animationTimer = 0;
         }
     }
@@ -65,23 +65,15 @@ export class Character {
     }
 
     /**
-     * 角色移動
+     * 角色移動 (基於磁磚的移動)
+     * 適用於玩家角色 (胖波和熊大)
      * @param {string} direction - 移動方向 ('up', 'down', 'left', 'right')
-     * @param {function} isWalkableFn - 檢查磁磚是否可通行的函數
+     * @param {function} isWalkableFn - 檢查磁磚是否可通行的函數 (Map.isWalkable)
      */
     move(direction, isWalkableFn) {
-        // 判斷是否到達目標磁磚，使用一個小的容差值
-        const targetPxX_current = this.targetX * this.tileSize;
-        const targetPxY_current = this.targetY * this.tileSize;
-
-        const distToTarget = Math.sqrt(
-            Math.pow(targetPxX_current - this.pxX, 2) +
-            Math.pow(targetPxY_current - this.pxY, 2)
-        );
-
-        // 如果距離目標還很遠（大於移動速度），說明仍在移動中，忽略新的輸入
-        // 這裡使用一個小於 speedPx 的容差值，確保在接近目標時也能接受新指令
-        if (distToTarget > (this.speedPx / 2)) { // 調整容差值
+        // 如果角色正在移動到某個目標磁磚，則忽略新的移動指令
+        // 確保角色完成一個磁磚的移動後才能接收下一個指令
+        if (this.pxX !== this.targetX * this.tileSize || this.pxY !== this.targetY * this.tileSize) {
             return;
         }
 
@@ -103,13 +95,12 @@ export class Character {
                 break;
         }
 
-        // 檢查新的目標位置是否在邊界內
-        // 這裡假設 isWalkableFn 也會檢查邊界，但為了更健壯，可以在這裡預先檢查
-        // 通常 isWalkableFn 會包含這個邏輯
+        // 檢查新的目標磁磚是否可通行
         if (isWalkableFn(newTargetX, newTargetY)) {
             this.targetX = newTargetX;
             this.targetY = newTargetY;
-            this.isMoving = true; // 開始移動
+            this.isMoving = true; // 標記為正在移動
+            this.animationTimer = 0; // 重置動畫計時器
         } else {
             this.isMoving = false; // 無法移動，停止動畫
         }
