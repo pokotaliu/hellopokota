@@ -145,15 +145,8 @@ export class BrownBearCharacter extends Character {
             let nextTargetX = this.x;
             let nextTargetY = this.y;
 
-            const targetPxX_current = this.targetX * this.tileSize;
-            const targetPxY_current = this.targetY * this.tileSize;
-            const distToCurrentTarget = Math.sqrt(
-                Math.pow(targetPxX_current - this.pxX, 2) +
-                Math.pow(targetPxY_current - this.pxY, 2)
-            );
-
-            // 只有當到達當前目標磁磚時才計算新目標
-            if (distToCurrentTarget <= this.speedPx) {
+            // 判斷是否到達當前目標磁磚 (使用磁磚座標判斷，更可靠)
+            if (this.x === this.targetX && this.y === this.targetY) {
                 // 如果敵人在攻擊範圍內，則停留在原地攻擊
                 if (distToClosestEnemy <= GAME_CONSTANTS.BROWN_BEAR_ATTACK_RANGE_TILES) {
                     nextTargetX = this.x;
@@ -211,50 +204,6 @@ export class BrownBearCharacter extends Character {
             // 如果沒有敵人，停止移動
             this.targetX = this.x; // 停止移動
             this.targetY = this.y;
-        }
-    }
-
-    /**
-     * 角色移動
-     * @param {string} direction - 移動方向 ('up', 'down', 'left', 'right')
-     * @param {function} isWalkableFn - 檢查磁磚是否可通行的函數
-     */
-    move(direction, isWalkableFn) {
-        // 判斷是否到達目標磁磚，使用一個小的容差值
-        const targetPxX_current = this.targetX * this.tileSize;
-        const targetPxY_current = this.targetY * this.tileSize;
-
-        const distToTarget = Math.sqrt(
-            Math.pow(targetPxX_current - this.pxX, 2) +
-            Math.pow(targetPxY_current - this.pxY, 2)
-        );
-
-        // 如果距離目標還很遠（大於移動速度），說明仍在移動中，忽略新的輸入
-        if (distToTarget > this.speedPx) {
-            return;
-        }
-
-        let newTargetX = this.targetX;
-        let newTargetY = this.targetY;
-
-        switch (direction) {
-            case 'left':
-                newTargetX = this.targetX - 1;
-                break;
-            case 'right':
-                newTargetX = this.targetX + 1;
-                break;
-            case 'up':
-                newTargetY = this.targetY - 1;
-                break;
-            case 'down':
-                newTargetY = this.targetY + 1;
-                break;
-        }
-
-        if (isWalkableFn(newTargetX, newTargetY)) {
-            this.targetX = newTargetX;
-            this.targetY = newTargetY;
         }
     }
 }
